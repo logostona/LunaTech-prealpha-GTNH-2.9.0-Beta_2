@@ -133,7 +133,7 @@ Each becomes a CI-asserted regression gate once measured.
 
 ### M0 — EU ↔ SI mapping ⚖️ *(first slice; everything else is scoped against it)*
 
-Deliverable: [UNITS.md](UNITS.md) promoted from draft to normative, plus a machine-readable constants resource and the stock-anchor audit table.
+Deliverable: [UNITS.md](UNITS.md) promoted from draft to normative, plus a machine-readable constants resource and the stock-anchor audit table in [AUDIT.md](AUDIT.md).
 
 **Method revised.** The original plan was to *derive* a J-per-EU factor from GTNH's implicit anchors. That plan is void: stock GTNH implies mutually inconsistent factors across battery capacity, NEI recipe cost, fuel energy and water heating, because each was balanced independently for gameplay. There is no single factor to discover. M0 therefore declares the factor and audits stock values against it.
 

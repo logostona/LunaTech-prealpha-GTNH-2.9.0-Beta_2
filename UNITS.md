@@ -30,13 +30,15 @@ Justification is numerical range and dimensional convenience, in that order:
 | Property | Consequence of κ = 1 |
 |---|---|
 | Minimum machine rating (1 EU/t) | 20 W |
-| Maximum rating (MAX tier, `int` bound) | ≈ 43 GW |
+| Maximum recipe rating (`mEUt` is `int`) | 42.95 GW |
 | Total-energy headroom (`long` EU) | ≈ 9.2 EJ |
 | Quantization floor | 1 J |
 | EU/t → W | multiply by 20 |
 | EU → J | identity |
 
 A smaller κ risks `int` overflow on high-tier power and `long` overflow on accumulated energy; a larger κ quantizes small chemical reactions to zero. κ = 1 sits centrally in the usable range and makes the conversion auditable by inspection.
+
+✅ **Verified at `5.09.52.594`.** `GTRecipe.mEUt` is declared `int` (`GTRecipe.java:102`, alongside `mDuration` and `mSpecialValue`), so recipe power is bounded at 2 147 483 647 EU/t regardless of `GTValues.V[]` being `long[]`. GregTech itself is already pressed against that ceiling: the MAX tier is defined as `Integer.MAX_VALUE - 7`, not as 4× the tier below it, purely to stay inside `int`. The range argument for κ = 1 is therefore not merely comfortable — it is the same constraint GregTech already had to design around, and κ = 1 places LunaTech's usable band exactly where GregTech's own headroom ends.
 
 **Quantization floor:** no LunaTech process may have an energy term below 1 J. Reactions at smaller scale must be aggregated to a larger batch basis rather than rounded.
 
@@ -46,7 +48,7 @@ A smaller κ risks `int` overflow on high-tier power and `long` overflow on accu
 
 ⚖️ **GT's voltage tiers are retained unmodified.** Their numeric values are treated as tier indices whose *implied power* under κ = 1 happens to fall on a realistic industrial ladder. LunaTech does not renumber them.
 
-Tier ladder ❓ — **values pending verification against `GT_Values.V[]` at `5.09.52.594`; do not cite until confirmed** (§10):
+✅ Tier ladder **verified** against `GTValues.java:93-96` at `5.09.52.594`. The ladder is ×4 per tier from ULV through UXV, then breaks: MAX is `Integer.MAX_VALUE - 7` = 2 147 483 640, which is 8 less than 4 × UXV, because 4 × UXV = 2 147 483 648 overflows `int`. A 16th entry, 8 589 934 592, exists solely as an out-of-bounds guard and is commented in source as "not really a real tier" — it must never be treated as one.
 
 | Tier | EU/t | Power | Industrial analogue |
 |---|---|---|---|
@@ -64,7 +66,7 @@ Tier ladder ❓ — **values pending verification against `GT_Values.V[]` at `5.
 | UIV | 33 554 432 | 671.1 MW | — |
 | UMV | 134 217 728 | 2.68 GW | national grid scale |
 | UXV | 536 870 912 | 10.74 GW | — |
-| MAX | 2 147 483 647 | 42.95 GW | ≈ 40 reactors |
+| MAX | 2 147 483 640 | 42.95 GW | ≈ 40 reactors |
 
 ### 3.1 Electrical potential and current ❓
 
@@ -86,6 +88,8 @@ Every other extensive quantity derives from this single declaration, using data 
 - **Amount of substance:** n = m / M, from the material's real molar mass
 
 Solids inherit the same basis through GT's existing unit ratios — 1 ingot = 144 mB ⇒ 144 mL. Worked example, iron: 144 mL × 7.874 g/cm³ = **1.134 kg** per ingot.
+
+✅ **Verified.** `GTValues.L = 144`, documented in source as "Fluid per Material Unit" (`GTValues.java:80`; now deprecated in favour of `GTRecipeBuilder.INGOTS`, same ratio). The propagation from fluids to solids therefore holds, and the 1.134 kg iron ingot and its ≈ 1.05 MJ melt duty stand as computed.
 
 ⚖️ **Rationale.** This is the only basis under which one number means the same thing for a fluid and a solid, and under which volume, mass and moles all follow from one declaration. It also reproduces GTNH's existing pacing: the melt duty for one iron ingot is ≈ 1.05 MJ (772 kJ sensible from 298→1811 K, plus 280 kJ fusion), which at HV takes ≈ 103 s and at EV ≈ 26 s — the same order as stock blast furnace timings. A molar basis (1000 mB ≡ 1 mol) makes the same ingot 8 g and the same melt 0.7 s at HV, which would force artificially inflated durations to stay recognizable — the "artificial grind" PHILOSOPHY §5 forbids.
 
@@ -115,7 +119,9 @@ SI → EU compilation happens once, at registration. Rules:
 1. ⚖️ **Energy demand rounds up. Energy output rounds down.** Never the reverse — this is what makes O2 ("no free energy") hold under quantization rather than merely on average.
 2. ⚖️ **κ appears in exactly one place in the codebase.** A single `Units` constant. A test asserts no other conversion literal exists.
 3. ⚖️ **Accumulated rounding is checked across recipe chains,** not only per recipe, so a long chain cannot drift into net energy gain.
-4. ❓ Overclocking interacts with this directly and is unresolved — see §9 D8.
+4. **Overclocking.** ✅ Verified at `OverclockCalculator.java:33-59`: `eutIncreasePerOC = 4`, `durationDecreasePerOC = 2`, so a standard overclock **doubles total energy consumed per tier**. `enablePerfectOC()` sets `durationDecreasePerOC = 4`, conserving total energy. The blast furnace path uses `durationDecreasePerHeatOC = 4` (final, energy-conserving), gated on `HEAT_OVERCLOCK_THRESHOLD = 1800` with a separate `HEAT_DISCOUNT_THRESHOLD = 900`. Consumption is computed as `ceil(recipePower × 4^overclocks)` into a `long`, while duration stays `int`.
+
+   ⚖️ **D8 resolution — keep the mechanic, give it physics.** GregTech's standard overclock already imposes a 2× energy penalty per tier. Under κ = 1 that is a statement about efficiency, and it is *directionally correct*: driving a process faster at higher power dissipates more, because irreversibility grows with rate. LunaTech therefore retains standard overclocking and interprets it as entropy production, with perfect overclocking as the reversible ideal limit. This means the mechanic needs no override — only a physical reading and an honest UI. The exact 2× factor per tier is not itself derived from anything, so its *magnitude* remains an audit item; its *sign* is right.
 
 ## 7. Display
 
@@ -128,13 +134,15 @@ SI → EU compilation happens once, at registration. Rules:
 
 LunaTech cannot remove EU as a storage type: GT stores energy as `long` EU and AE2, OpenComputers, the AFSU and other pack mods transact in it. At any interface with content LunaTech does not replace, EU is exchanged at exactly κ with no adjustment. Energy crossing that boundary is conserved by definition; whether the *stock side* then treats it physically is out of scope.
 
-## 9. Verification obligations
+## 9. Verification status
 
-Nothing in this document may be cited as fact until read from source at `5.09.52.594`:
+Read from source at tag `5.09.52.594` (vendored at `vendor/GT5-Unofficial`, outside this repo). Class names dropped their `GT_` prefixes in this build — the relevant classes are `GTValues`, `GTRecipe`, `OverclockCalculator`, `HeatingCoilLevel`.
 
-- [ ] `GT_Values.V[]` tier values — confirms the §3 ladder
-- [ ] Field widths for recipe power and machine energy storage (`int` vs `long`) — confirms the §2 range argument
-- [ ] Overclocking arithmetic — standard vs perfect, and whether total energy is conserved
-- [ ] Blast furnace heat handling and its Kelvin semantics
-- [ ] Fuel energy values, battery capacities, steam conversion — inputs to the §5 audit
-- [ ] GT solid unit ratios (ingot / nugget / plate in mB) — confirms §4 propagation to solids
+- [x] **Tier values** — `GTValues.java:93-96`. §3 ladder confirmed; MAX corrected to 2 147 483 640 and the 16th guard entry documented.
+- [x] **Field widths** — `GTRecipe.java:102`, `mEUt` is `int`. §2 range argument confirmed and strengthened.
+- [x] **Overclocking** — `OverclockCalculator.java:33-75`. Standard OC doubles energy per tier; perfect OC conserves it. D8 resolved in §6.
+- [x] **Blast furnace heat** — `HeatingCoilLevel.java`. Heat is `1 + 900 × ordinal`, giving 901 / 1801 / 2701 … 13501. Nominally Kelvin, but a synthetic linear ladder, not a physical one. See audit finding A1.
+- [x] **Steam conversion** — `GTValues.STEAM_PER_WATER = 160`. See audit finding A2.
+- [x] **Battery capacity** — `MetaGeneratedItem01.java:5158`, LV lithium cell = 100 000 EU at V[1]. See audit finding A3.
+- [x] **Solid unit ratios** — `GTValues.L = 144`. §4 propagation confirmed.
+- [ ] **Chemical fuel energy values** — *mechanism located, values not yet extracted.* Fuels carry `Materials.mFuelPower` / `mFuelType` (`Materials.java:1189-1190`, set at 1341) and are auto-registered by `GTItemIterator` into the `Fuel` recipe map via the `FUEL_VALUE` metadata key (`GTRecipeConstants.java:81`). `FuelLoader` holds only naquadah-reactor and mod-integration fuels, which have no real-world LHV. Extracting the real combustibles means walking the `Materials` enum, which is the remaining M0 task.
