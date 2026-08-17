@@ -49,10 +49,16 @@ class SiFormatTest {
     @Test
     @DisplayName("Extreme and invalid values stay printable")
     void doesNotBlowUp() {
-        assertTrue(SiFormat.energy(Double.NaN).endsWith("J"));
-        assertTrue(SiFormat.power(Double.POSITIVE_INFINITY).endsWith("W"));
+        String notANumber = SiFormat.energy(Double.NaN);
+        assertTrue(notANumber.endsWith("J"));
+
+        String infinite = SiFormat.power(Double.POSITIVE_INFINITY);
+        assertTrue(infinite.endsWith("W"));
+
         assertEquals("-640 W", SiFormat.power(-640.0d));
+
         // Beyond the largest prefix the number simply grows rather than throwing.
-        assertTrue(SiFormat.energy(1.0e30d).endsWith("EJ"));
+        String beyondPrefixes = SiFormat.energy(1.0e30d);
+        assertTrue(beyondPrefixes.endsWith("EJ"));
     }
 }
