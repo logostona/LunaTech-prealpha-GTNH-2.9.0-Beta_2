@@ -62,7 +62,7 @@ class UnitsTest {
     @Test
     @DisplayName("An iron ingot melt is about 1.05 MJ, derived from the dataset not hardcoded")
     void ironIngotMeltDuty() {
-        Material iron = Datasets.materials().require("iron");
+        Material iron = Datasets.material("iron");
 
         double massKg = iron.massKilograms(Units.MILLIBUCKETS_PER_INGOT);
         double deltaT = iron.meltingPoint.value - 298.15d;

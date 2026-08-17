@@ -36,7 +36,8 @@ class DatasetTest {
         Set<String> seen = new HashSet<String>();
         for (Material material : Datasets.materials().materials) {
             assertNotNull(material.id, "material with no id");
-            assertFalse(material.id.trim().isEmpty(), "material with blank id");
+            String trimmedId = material.id.trim();
+            assertFalse(trimmedId.isEmpty(), "material with blank id");
             assertEquals(material.id.toLowerCase(), material.id, "material id must be lowercase");
             assertTrue(seen.add(material.id), "duplicate material id: " + material.id);
             assertNotNull(material.formula, "no formula for " + material.id);
@@ -63,7 +64,7 @@ class DatasetTest {
     @Test
     @DisplayName("Mass derives from the matter basis: an iron ingot is 1.134 kg")
     void massFollowsFromTheMatterBasis() {
-        Material iron = Datasets.materials().require("iron");
+        Material iron = Datasets.material("iron");
         assertEquals(1.134d, iron.massKilograms(144L), 1.0e-3d);
     }
 
@@ -76,7 +77,8 @@ class DatasetTest {
         assertTrue(!Double.isNaN(q.value) && !Double.isInfinite(q.value), where + " is not finite");
         assertEquals(expectedUnit, q.unit, where + " has the wrong unit");
         assertNotNull(q.source, where + " has no source");
-        assertFalse(q.source.trim().isEmpty(), where + " has a blank source");
+        String trimmedSource = q.source.trim();
+        assertFalse(trimmedSource.isEmpty(), where + " has a blank source");
         assertNotNull(q.method, where + " has no method");
         assertTrue(
             q.isExperimental() || q.method.startsWith("estimated:"),

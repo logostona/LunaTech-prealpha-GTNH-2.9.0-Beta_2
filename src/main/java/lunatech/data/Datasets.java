@@ -38,6 +38,12 @@ public final class Datasets {
         return materials;
     }
 
+    /** Convenience accessor for a single material. Throws if the id is absent. */
+    public static Material material(String id) {
+        MaterialDataset dataset = materials();
+        return dataset.require(id);
+    }
+
     private static <T> T load(String path, Class<T> type) {
         InputStream stream = Datasets.class.getResourceAsStream(path);
         if (stream == null) {
@@ -67,13 +73,16 @@ public final class Datasets {
     private static void verify(MaterialDataset dataset) {
         if (dataset.schemaVersion != SUPPORTED_SCHEMA_VERSION) {
             throw new IllegalStateException(
-                "Dataset schemaVersion " + dataset.schemaVersion + " but this build understands "
+                "Dataset schemaVersion " + dataset.schemaVersion
+                    + " but this build understands "
                     + SUPPORTED_SCHEMA_VERSION);
         }
         if (!PINNED_GT5U_VERSION.equals(dataset.gt5uVersion)) {
             throw new IllegalStateException(
-                "Dataset was verified against GregTech " + dataset.gt5uVersion + " but LunaTech pins "
-                    + PINNED_GT5U_VERSION + "; AUDIT.md is only valid for the pinned build");
+                "Dataset was verified against GregTech " + dataset.gt5uVersion
+                    + " but LunaTech pins "
+                    + PINNED_GT5U_VERSION
+                    + "; AUDIT.md is only valid for the pinned build");
         }
     }
 }

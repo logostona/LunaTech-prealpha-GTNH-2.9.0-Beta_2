@@ -35,6 +35,12 @@ This build has **absorbed many former addons into the single GregTech jar**, all
 
 Resource files are token-expanded by the convention plugin. The valid tokens are `${modVersion}`, `${minecraftVersion}` and `${modName}` — *not* `${version}` or `${mcversion}`, which fail `:processResources` with an unhelpful "could not copy file" error.
 
+## Formatting (Spotless, enforced by CI)
+
+Import order is `java, javax, net, org, com`, with unmatched packages (`cpw`, `lunatech`) **last**, blank line between groups. Static imports first.
+
+The Eclipse 4.19 profile **wraps any chain of two or more method calls onto separate lines**, regardless of line length. `Datasets.materials().require("iron")` becomes two lines. Prefer writing a single-call accessor or a local variable over accepting the wrap — `Datasets.material("iron")` and `String t = s.trim(); t.isEmpty()` both read better than what the formatter produces.
+
 Live instance for reference: `C:\Users\Computador\AppData\Roaming\PrismLauncher\instances\GTNH 2.9.0`
 
 **Never cite a GregTech value that has not been read from that tree.** Cite as `file:line`.
