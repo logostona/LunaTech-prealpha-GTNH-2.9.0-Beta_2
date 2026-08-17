@@ -161,7 +161,9 @@ The five `UnitsTest` assertions passing means κ, the matter basis, the tier lad
 
 **Note on CI diagnostics.** GitHub gates Actions job logs behind repository admin auth even for public repos, so the workflow republishes failures through the public annotations API. Annotations are capped at 10 per step, so the whole diff goes into a single annotation; emitting one per line truncates silently and produces confidently wrong conclusions.
 
-**Remaining:** load into a live GTNH instance; dataset loader (blocked on D4); performance baseline (§7) measured and budgets set.
+✅ **Dataset loader done (D4).** JSON, loaded from the classpath via Gson, specified in [DATA.md](DATA.md). Every value carries units and provenance because the schema admits no bare numbers, and the harness asserts unit strings per field, rejects unsourced constants, and refuses data verified against a GregTech build other than the pinned one. The iron figures behind the pacing argument now come from the dataset rather than being hardcoded in the test.
+
+**Remaining:** load into a live GTNH instance; performance baseline (§7) measured and budgets set. Both need the mod running, so both wait on a local JDK.
 
 ### M2 — Continuous-flow reactor (O4)
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
@@ -181,7 +183,7 @@ Inorganic/materials, nuclear, automation. Sequenced after M2's architecture is p
 | ~~D1~~ | ~~Build toolchain and Java target~~ **Resolved:** GTNH convention plugins, Gradle 9.4.0 on JDK 17+, JVM Downgrader to Java 8 bytecode (M1) | Blocks M1 entirely | closed |
 | ~~D2~~ | ~~Adopt UniMixins from M1 or defer~~ **Resolved:** deferred; `usesMixins = false` until a behavioural change needs it (M1) | Defines how invasive v1 can be | closed |
 | D3 | Ratify the §3.1 error budgets | They are the reliability contract; drafted, not agreed | — |
-| D4 | Dataset format and versioning (JSON / CSV / other), and whether generation code lives in this repo or a sibling | Affects harness design and review ergonomics | — |
+| ~~D4~~ | ~~Dataset format and versioning~~ **Resolved: JSON.** Schema, provenance and versioning rules in [DATA.md](DATA.md). Curated in this repo until a generation pipeline exists, then a sibling repo emits the same schema | Affects harness design and review ergonomics | closed |
 | ~~D5~~ | ~~Does "harder than stock" count as invalidating a progression milestone?~~ **Resolved:** harder is permitted, earlier and cheaper are not (§6) | Governs every replacement decision | closed |
 | D6 | Is OpenComputers integration in v1 or deferred? | §4 currently claims it without a phase | — |
 | D7 | Set §7 performance budgets from the M1 baseline | Turns O6/O7 from aspiration into gates | — |

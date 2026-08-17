@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import lunatech.data.Datasets;
+import lunatech.data.Material;
+
 /**
  * First member of the validation harness described in SCOPE.md section 3.
  * <p>
@@ -57,18 +60,21 @@ class UnitsTest {
     }
 
     @Test
-    @DisplayName("An iron ingot melt is about 1.05 MJ, the figure the pacing argument rests on")
+    @DisplayName("An iron ingot melt is about 1.05 MJ, derived from the dataset not hardcoded")
     void ironIngotMeltDuty() {
-        final double massKg = 1.134d; // 144 mL at 7.874 g/cm3
-        final double cpKjPerKgK = 0.45d;
-        final double deltaT = 1811.0d - 298.0d;
-        final double fusionKjPerKg = 247.0d;
+        Material iron = Datasets.materials().require("iron");
 
-        double dutyJoules = massKg * (cpKjPerKgK * deltaT + fusionKjPerKg) * 1000.0d;
+        double massKg = iron.massKilograms(Units.MILLIBUCKETS_PER_INGOT);
+        double deltaT = iron.meltingPoint.value - 298.15d;
+        double dutyJoules = massKg * (iron.specificHeat.value * deltaT + iron.enthalpyOfFusion.value);
 
         // Roughly 1.05 MJ. At HV (10.24 kW) that is about 103 s, the same order as stock GTNH
         // blast furnace timings -- the agreement that settled the matter basis.
+        assertEquals(1.134d, massKg, 1.0e-3d);
         assertEquals(1.05e6d, dutyJoules, 2.0e4d);
         assertEquals(103.0d, Units.euDemand(dutyJoules) / Units.watts(512L), 2.0d);
+
+        // Constant Cp over 1500 K is a first-order approximation; see DATA.md section 5.
+        assertTrue(iron.specificHeat.isExperimental(), "the pacing argument rests on measured Cp");
     }
 }

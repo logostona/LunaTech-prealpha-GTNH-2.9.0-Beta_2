@@ -1,0 +1,76 @@
+# LunaTech — Dataset Format
+
+**Status:** Draft 0.1. Resolves [SCOPE.md](SCOPE.md) §9 D4.
+**Parsed with:** Gson, which Minecraft 1.7.10 already provides — no new runtime dependency.
+
+## 1. Decisions
+
+⚖️ **JSON.** Datasets are JSON resources under `src/main/resources/lunatech/data/`, loaded from the classpath at runtime and validated by the harness at build time.
+
+⚖️ **Every value is an object, never a bare number.** A bare `7874` records a magnitude and nothing else. Objective O5 requires provenance on every constant, and [SCOPE.md §3.1](SCOPE.md#31-draft-error-budgets--numbers-to-ratify--9-d3) requires estimated values to inherit their method's uncertainty rather than the experimental budget. Neither survives a bare number, so the schema makes the disciplined form the only form.
+
+⚖️ **Units are explicit strings on every quantity, in SI.** The harness asserts the unit string per field. A silent unit error is the single most likely way to corrupt this project's numbers, and this makes it a build failure rather than a plausible-looking result.
+
+⚖️ **Curated in this repository for now.** There is no generation pipeline yet, so datasets are hand-curated here. When property estimation (QSPR, group contribution) arrives it belongs in a sibling repository per PHILOSOPHY's "Algorithmic Extensibility", emitting files in this same schema. The schema is the contract between them, which is why it is specified independently of how values are produced.
+
+## 2. Versioning
+
+| Field | Meaning |
+|---|---|
+| `schemaVersion` | Integer. Bumped only on a breaking shape change; the loader rejects versions it does not know. |
+| `datasetVersion` | ISO date of last content change. Advisory. |
+| `gt5uVersion` | The GregTech build the data was verified against. Must match the pin in `dependencies.gradle`. |
+
+The `gt5uVersion` check is deliberate: [AUDIT.md](AUDIT.md) is only valid against `5.09.52.594`, so a dataset claiming a different build is a defect the harness should catch rather than something to discover later.
+
+## 3. Quantity shape
+
+```json
+{
+  "value": 7874.0,
+  "unit": "kg/m3",
+  "source": "CRC Handbook of Chemistry and Physics, 97th ed.",
+  "method": "experimental",
+  "uncertainty": 1.0
+}
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `value` | yes | Finite. NaN and infinity are rejected. |
+| `unit` | yes | SI, and must match the expected unit for that field. |
+| `source` | yes | Reference work, DOI, or named estimation method. Never blank. |
+| `method` | yes | `experimental`, or `estimated:<model>` — e.g. `estimated:joback`. |
+| `uncertainty` | no | Absolute, in the same unit. Required when `method` is not `experimental`. |
+
+## 4. Material record
+
+```json
+{
+  "id": "iron",
+  "formula": "Fe",
+  "molarMass":        { "value": 55.845,  "unit": "g/mol", ... },
+  "density":          { "value": 7874.0,  "unit": "kg/m3", ... },
+  "meltingPoint":     { "value": 1811.0,  "unit": "K",     ... },
+  "specificHeat":     { "value": 449.0,   "unit": "J/(kg*K)", ... },
+  "enthalpyOfFusion": { "value": 247290.0,"unit": "J/kg",  ... }
+}
+```
+
+`id` is lowercase, unique, and stable — it is the join key to GregTech materials and must not be renamed casually. Optional properties may be omitted; when present they must be complete.
+
+Expected units, asserted by the harness:
+
+| Field | Unit |
+|---|---|
+| `molarMass` | `g/mol` |
+| `density` | `kg/m3` |
+| `meltingPoint`, `boilingPoint` | `K` |
+| `specificHeat` | `J/(kg*K)` |
+| `enthalpyOfFusion`, `enthalpyOfVaporisation` | `J/kg` |
+
+## 5. Known limitation
+
+`specificHeat` is currently a single value at 298 K, used as if constant across the whole heating range. For iron heated to melting this is a first-order approximation that ignores both the rise in Cp with temperature and the α→γ→δ phase transitions. It is good enough for the pacing argument in [UNITS.md §4](UNITS.md#4-the-matter-basis) and not good enough for O2's energy-balance claims.
+
+Replacing it with a Cp(T) correlation is required before the reactor work in M2, and is the first planned schema change.

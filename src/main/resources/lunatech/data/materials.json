@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "2026-08-17",
+  "gt5uVersion": "5.09.52.594",
+  "materials": [
+    {
+      "id": "iron",
+      "formula": "Fe",
+      "molarMass": {
+        "value": 55.845,
+        "unit": "g/mol",
+        "source": "IUPAC standard atomic weights 2021",
+        "method": "experimental"
+      },
+      "density": {
+        "value": 7874.0,
+        "unit": "kg/m3",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed., at 293 K",
+        "method": "experimental"
+      },
+      "meltingPoint": {
+        "value": 1811.0,
+        "unit": "K",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed.",
+        "method": "experimental"
+      },
+      "specificHeat": {
+        "value": 449.0,
+        "unit": "J/(kg*K)",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed., at 298 K",
+        "method": "experimental"
+      },
+      "enthalpyOfFusion": {
+        "value": 247290.0,
+        "unit": "J/kg",
+        "source": "Derived from 13.81 kJ/mol (CRC 97th ed.) and the molar mass above",
+        "method": "experimental"
+      }
+    },
+    {
+      "id": "water",
+      "formula": "H2O",
+      "molarMass": {
+        "value": 18.015,
+        "unit": "g/mol",
+        "source": "IUPAC standard atomic weights 2021",
+        "method": "experimental"
+      },
+      "density": {
+        "value": 997.0,
+        "unit": "kg/m3",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed., at 298 K",
+        "method": "experimental"
+      },
+      "meltingPoint": {
+        "value": 273.15,
+        "unit": "K",
+        "source": "Definition of the ice point at 101.325 kPa",
+        "method": "experimental"
+      },
+      "boilingPoint": {
+        "value": 373.124,
+        "unit": "K",
+        "source": "IAPWS-IF97 saturation line at 101.325 kPa",
+        "method": "experimental"
+      },
+      "specificHeat": {
+        "value": 4181.8,
+        "unit": "J/(kg*K)",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed., at 298 K",
+        "method": "experimental"
+      },
+      "enthalpyOfVaporisation": {
+        "value": 2256400.0,
+        "unit": "J/kg",
+        "source": "IAPWS-IF97 at 373.124 K and 101.325 kPa",
+        "method": "experimental"
+      }
+    }
+  ]
+}
