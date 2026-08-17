@@ -163,7 +163,14 @@ The five `UnitsTest` assertions passing means κ, the matter basis, the tier lad
 
 ✅ **Dataset loader done (D4).** JSON, loaded from the classpath via Gson, specified in [DATA.md](DATA.md). Every value carries units and provenance because the schema admits no bare numbers, and the harness asserts unit strings per field, rejects unsourced constants, and refuses data verified against a GregTech build other than the pinned one. The iron figures behind the pacing argument now come from the dataset rather than being hardcoded in the test.
 
-**Remaining:** load into a live GTNH instance; performance baseline (§7) measured and budgets set. Both need the mod running, so both wait on a local JDK.
+✅ **Loads into a live instance.** Built locally on JDK 21 and installed into the GTNH 2.9.0-beta2 instance; the mod appears in the in-game mod list, confirming `required-after:gregtech` resolves against the real pack and not merely against the maven artifact.
+
+Note on JDKs: `java` on PATH is a Java 8 JRE, but PrismLauncher had already downloaded full JDKs 17, 21 and 25 — see [CLAUDE.md](CLAUDE.md) for paths and for which of the four build jars is the shippable one.
+
+**Remaining: the §7 performance baseline.** Deliberately split, because a tick-cost budget is meaningless while the mod ticks nothing:
+
+- *Measurable now:* load-time delta, heap delta at post-init, and NEI page delta — all of which should be indistinguishable from zero for a mod that registers nothing. Establishing the method and confirming zero is worth doing before content exists, since it is the only time the answer is known in advance.
+- *Deferred to M2:* the tick-cost budget, which needs running multiblocks to measure.
 
 ### M2 — Continuous-flow reactor (O4)
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
