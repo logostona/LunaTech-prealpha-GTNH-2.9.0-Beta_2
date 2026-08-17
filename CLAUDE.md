@@ -31,7 +31,9 @@ GT5U source is vendored **outside git** at `D:\LunaTech\vendor\GT5-Unofficial`, 
 
 Class names dropped their `GT_` prefixes in this build: `GTValues`, `GTRecipe`, `OverclockCalculator`, `HeatingCoilLevel`, `MTEBasicGenerator`.
 
-This build has **absorbed** bartworks, goodgenerator, ggfab and gtnhlanth into the main jar, so they are in scope too.
+This build has **absorbed many former addons into the single GregTech jar**, all therefore in scope: bartworks (+ its cross-mod modules), tectech, GT++ (`miscutils`), goodgenerator, ggfab, kekztech, kubatech, gtnhlanth, galacticgreg, gtnhintergalactic, gtneioreplugin and detravscannermod. The full list is the `modList` in `src/main/resources/mcmod.info` of the vendored source.
+
+Resource files are token-expanded by the convention plugin. The valid tokens are `${modVersion}`, `${minecraftVersion}` and `${modName}` — *not* `${version}` or `${mcversion}`, which fail `:processResources` with an unhelpful "could not copy file" error.
 
 Live instance for reference: `C:\Users\Computador\AppData\Roaming\PrismLauncher\instances\GTNH 2.9.0`
 

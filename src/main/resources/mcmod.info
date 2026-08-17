@@ -1,15 +1,20 @@
-[
 {
-  "modid": "lunatech",
-  "name": "LunaTech",
-  "description": "Anchors GregTech: New Horizons process design, kinetics and energy dynamics in empirical data. SI is the unit of meaning; EU is a wire protocol.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "https://github.com/logostona/LunaTech-prealpha-GTNH-2.9.0-Beta_2",
-  "authorList": ["logostona"],
-  "credits": "Built on GregTech 5 Unofficial and GTNH.",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": ["gregtech"]
+  "modListVersion": 2,
+  "modList": [
+    {
+      "modid": "lunatech",
+      "name": "LunaTech",
+      "description": "Anchors GregTech: New Horizons process design, kinetics and energy dynamics in empirical data. SI is the unit of meaning; EU is a wire protocol.",
+      "version": "${modVersion}",
+      "mcversion": "${minecraftVersion}",
+      "url": "https://github.com/logostona/LunaTech-prealpha-GTNH-2.9.0-Beta_2",
+      "updateUrl": "",
+      "authorList": ["logostona"],
+      "credits": "Built on GregTech 5 Unofficial and GTNH.",
+      "logoFile": "",
+      "screenshots": [],
+      "parent": "",
+      "dependencies": ["gregtech"]
+    }
+  ]
 }
-]
