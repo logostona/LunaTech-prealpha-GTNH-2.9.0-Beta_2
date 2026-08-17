@@ -61,6 +61,25 @@ jobs:
               echo "::error::${clean}"
             done
 
+      # Spotless can only be satisfied by matching GTNH's exact formatter output, and there
+      # is no JDK on the dev machine to run spotlessApply locally. So let CI compute the
+      # diff and publish it, since annotations are readable without repository auth.
+      - name: Show required formatting changes
+        if: failure()
+        run: |
+          ./gradlew spotlessApply --quiet || true
+          if git diff --quiet; then
+            echo "No spotless changes; the failure was something else."
+            exit 0
+          fi
+          echo "::group::spotless diff"
+          git --no-pager diff
+          echo "::endgroup::"
+          git --no-pager diff -U0 | head -n 80 | while IFS= read -r l; do
+            clean=$(printf '%s' "$l" | tr -d '\r' | sed 's/%/%25/g')
+            echo "::error::SPOTLESS ${clean}"
+          done
+
       - name: Upload logs and test results
         if: always()
         uses: actions/upload-artifact@v4
