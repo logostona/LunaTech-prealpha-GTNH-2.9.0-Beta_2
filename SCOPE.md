@@ -133,18 +133,19 @@ Each becomes a CI-asserted regression gate once measured.
 
 ### M0 — EU ↔ SI mapping ⚖️ *(first slice; everything else is scoped against it)*
 
-Deliverable: a document plus a machine-readable constants resource defining the mapping, with residuals.
+Deliverable: [UNITS.md](UNITS.md) promoted from draft to normative, plus a machine-readable constants resource and the stock-anchor audit table.
 
-Method:
-1. **Fix the trivial anchors.** 1 tick = 0.05 s, so 1 EU/t = 20 EU/s exactly; a J-per-EU scale factor therefore fixes W directly.
-2. **Enumerate GTNH's existing implicit anchors** from the 2.9.0-beta2 source — voltage tiers, EBF heat requirements (GTNH already specifies these in Kelvin, which is a genuine gift), steam-to-EU conversion, and the EU yield of every fuel whose real lower heating value is known.
-3. **Derive a candidate J/EU from each fuel independently.** Compare GT EU output against real LHV per unit. These will disagree; the spread is the finding.
-4. **Choose one anchor, publish the residuals** for all others rather than hiding them. Document which stock values we intend to correct (§6 rule 2) and which we accept as unfixable.
-5. **Investigate the overclocking energy question.** GT5U's standard overclock is understood to be ×4 EU/t for ÷2 time — i.e. total energy is *not* conserved, ~2× cost per tier — while "perfect" overclock conserves it. If confirmed against source, decide whether LunaTech interprets standard OC as a real thermodynamic efficiency loss or overrides it. This decision constrains every later energy claim.
+**Method revised.** The original plan was to *derive* a J-per-EU factor from GTNH's implicit anchors. That plan is void: stock GTNH implies mutually inconsistent factors across battery capacity, NEI recipe cost, fuel energy and water heating, because each was balanced independently for gameplay. There is no single factor to discover. M0 therefore declares the factor and audits stock values against it.
+
+1. ⚖️ **Declare the definition.** 1 EU ≡ 1 J exactly; 1 tick ≡ 0.05 s; 1 mB ≡ 1 mL. See [UNITS.md](UNITS.md) §2–§4 for the range and pacing arguments behind these.
+2. **Read the source at `5.09.52.594`** and complete the UNITS.md §9 verification checklist. Nothing is citable before this.
+3. **Enumerate every stock anchor** — voltage tiers, blast furnace heat requirements (already in Kelvin), steam conversion, battery capacities, and every fuel whose real lower heating value is known.
+4. **Produce the audit table** (UNITS.md §5): stock value, implied κ, correction factor, specific physical violation, disposition. The spread across anchors is expected output, not a problem to resolve. This table doubles as the recorded justification §6 rule 2 requires.
+5. **Resolve the overclocking question.** GT5U's standard overclock is understood to be ×4 EU/t for ÷2 time — total energy *not* conserved, roughly 2× cost per tier — while "perfect" overclock conserves it. If confirmed, decide whether LunaTech reads standard OC as a genuine thermodynamic efficiency loss or overrides it. This interacts directly with the rounding rules in UNITS.md §6 and constrains every later energy claim.
 
 **Verification requirement:** every numeric claim in step 2 and the OC behaviour in step 5 must be read out of the actual GT5U/GTNH 2.9.0-beta2 source in this repo's recorded dependency, not from memory or wiki. Tier values and conversion constants are stated nowhere in this document for exactly that reason.
 
-Exit criteria: mapping published; residual table complete; O1 satisfied; OC policy decided.
+Exit criteria: UNITS.md normative and source-verified; audit table complete with a disposition on every anchor; O1 satisfied; OC policy decided.
 
 ### M1 — Toolchain & validation skeleton
 Buildable addon against GTNH 2.9.0-beta2 ❓ (toolchain — §9 D1), loading into a live instance, doing nothing but registering itself. Dataset loader, JUnit tolerance harness, and CI green. Performance baseline harness (§7) measured and budgets set.
@@ -171,5 +172,9 @@ Inorganic/materials, nuclear, automation. Sequenced after M2's architecture is p
 | ~~D5~~ | ~~Does "harder than stock" count as invalidating a progression milestone?~~ **Resolved:** harder is permitted, earlier and cheaper are not (§6) | Governs every replacement decision | closed |
 | D6 | Is OpenComputers integration in v1 or deferred? | §4 currently claims it without a phase | — |
 | D7 | Set §7 performance budgets from the M1 baseline | Turns O6/O7 from aspiration into gates | — |
-| D8 | Chosen J-per-EU anchor, and the standard-overclock energy policy | Output of M0; every later energy number depends on it | — |
+| D8 | Standard-overclock energy policy: real efficiency loss, or override? | Interacts with UNITS.md §6 rounding; constrains every energy claim | — |
 | D9 | Versioning and release scheme for a pre-alpha pinned to a GTNH beta | Users need to know what pairs with what | — |
+| D11 | Expose real voltage classes per tier, or power-only? (UNITS.md §3.1) | Option (a) needs a story for tiers above UHV | — |
+| D12 | Does EU stay visible in the UI — hidden, or debug toggle? (UNITS.md §7) | Player-facing consequence of the SI-display decision | — |
+
+**Closed by [UNITS.md](UNITS.md):** the J-per-EU value (declared, not derived — §2), the matter basis (1 mB ≡ 1 mL — §4), and the SI-authoring direction (§1). The former D8 "chosen anchor" question is void: there is no anchor to choose, because stock GTNH is self-inconsistent (§5).
