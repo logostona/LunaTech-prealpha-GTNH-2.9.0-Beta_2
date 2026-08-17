@@ -134,9 +134,22 @@ SI → EU compilation happens once, at registration. Rules:
 
 GregTech's UI strings are lang keys with the number formatted separately in Java, which splits the work in two.
 
-**Energy — done, and free.** Nine keys stating a plain energy quantity (`Total: %s EU`, `Contains %s EU`, stored-energy readouts, fusion start cost, fuel value) are overridden to say joules. Because κ = 1, the displayed number is *already* joules, so this is a pure relabelling with no arithmetic and no code interception. It is worth being explicit that this only works at κ = 1; any other definition would have made this half a code change too.
+**Energy, lang-driven — done and verified in game.** Nine keys stating a plain energy quantity (`Total: %s EU`, `Contains %s EU`, stored-energy readouts, fusion start cost, fuel value) are overridden to say joules. Because κ = 1, the displayed number is *already* joules, so this is a pure relabelling with no arithmetic and no code interception. This only works at κ = 1; any other definition would have made it a code change too.
 
-Delivery is a lang file in the `gregtech` resource domain inside LunaTech's own jar. LunaTech declares `required-after:gregtech`, so its resource pack applies after GregTech's and these keys win.
+Delivery is a lang file in the `gregtech` resource domain inside LunaTech's own jar. LunaTech declares `required-after:gregtech`, so its resource pack applies after GregTech's and these keys win. ✅ Confirmed in a running instance: NEI shows `Total: 400 J` for a recipe drawing 4 EU/t for 5 s, which is 400 EU and therefore 400 J.
+
+**Energy, Java-driven — not done.** Not every unit label lives in a lang string, so the lang pass does not finish the energy half. The machine tooltip's `Capacity: 2,048 EU` comes from `gt.tileentity.eup_store=Capacity: %s`, where the lang string carries no unit at all and `TooltipHelper.euCapacityText` appends `" EU"` in Java. Changing it requires code, hence D2.
+
+`TooltipHelper` is nonetheless a good target, because it is central and lightly used:
+
+| Method | Hardcodes | Call sites |
+|---|---|---|
+| `euCapacityText` | `" EU"` | 1 |
+| `euRateText` | `" EU/t"` | 4 |
+| `euText` | nothing | 3 |
+| `voltageText` | nothing | 5 |
+
+A single mixin on this one class therefore relabels the tooltip capacity *and* converts the rate lines to watts — covering part of both halves at once. Beyond it sits a scattered remainder of about eight hand-built `" EU"` concatenations in `goodgenerator`, the ModularUI panels and a few generators, which have no central seam.
 
 Five further keys mentioning EU were **deliberately left alone** as ambiguous — two "EU Usage" discount strings that may be rates, an unverified "EU Cost", a cable-loss "EU-Volt" that is loss per amp per block, and a magnet tooltip whose EU figure is a percentage. Mislabelling is worse than not labelling.
 
