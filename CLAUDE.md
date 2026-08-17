@@ -70,6 +70,10 @@ A build emits **four** jars into `build/libs/`. Only the unclassified one goes i
 
 Copying `-predowngrade` into `mods/` puts a second jar declaring the same mod id on the classpath, with class files the 1.7.10 runtime cannot load. Filter on all three classifiers, not just `dev` and `sources`.
 
+The version comes from `git describe`, so **every commit produces a differently-named jar and `build/libs` accumulates them.** A classifier-only filter then matches several versions at once and installs all of them. Use `clean build`, or take only the newest, and clear `mods/lunatech-*.jar` before copying.
+
+Note also that Gradle cannot run inside the agent's sandbox — it needs a loopback connection for its daemon and fails with `Unable to establish loopback connection` even with `--no-daemon`. Local builds have to be run by the user; CI is the agent's build path.
+
 CI also builds on JDK 21 and is the authority when they disagree. CI emits its own errors as annotations because job logs need repo admin auth to read, even on a public repo.
 
 Branches: `main` holds documentation only; `m1-toolchain` holds the scaffold and stays off `main` until it compiles.
