@@ -76,7 +76,7 @@ Dispositions: **correct** (replace) · **accept** (physically defensible as-is) 
 
 **Eleven independent gases, ratios spanning 1.82 to 2.90, mean ≈ 2.3.** This is not a coincidence and not arbitrary balance: GregTech's gas fuel ladder is *ordered and scaled by real combustion enthalpy*, offset by a near-constant factor. Note that benzene and toluene — liquids at room temperature — fit the same cluster only when treated as ideal gases at STP, which confirms the phase convention rather than contradicting it.
 
-**Disposition: reinterpret, then rescale by one constant.** The ordering is already physically correct. The residual factor of ≈ 2.3 is a single global correction, not 11 separate ones, and its origin is a follow-up question (a compressed-gas basis, or a deliberate generator-efficiency headroom, would both produce a constant offset of roughly this size).
+**Disposition: correct, by one global rescale.** The ordering is already physically correct, so this is a single correction rather than eleven. The origin of the ≈ 2.3 factor is resolved in A7, and it is not benign.
 
 ### Liquids — compared against real LHV as a liquid
 
@@ -98,6 +98,20 @@ Dispositions: **correct** (replace) · **accept** (physically defensible as-is) 
 
 **Disposition: correct.** Liquid fuel energies must be rebuilt from density × mass-specific LHV once the matter basis is in force. This is the single largest quantitative correction the audit has identified, and it is a direct consequence of adopting 1 mB ≡ 1 mL.
 
+## A7 — Generators emit more energy than their fuel contains, and efficiency scales the wrong way
+
+**Stock:** generator efficiency is a construction argument in `LoaderMetaTileEntities.registerCombustionGenerators` / `registerGasTurbines`. Combustion: LV 95, MV 90, HV 85. Gas turbine: LV 95, MV 90, HV 85, EV 60, IV 50 (percent).
+
+**Violation — energy creation.** Delivered energy is `FUEL_VALUE × efficiency / 100`. For methane in an LV gas turbine that is 104 × 0.95 = **98.8 kJ/L delivered from a fuel whose real lower heating value is 35.8 kJ/L**. Efficiencies of 85–95 % cannot absorb the A6 offset — they barely move it. GregTech generators therefore return roughly 2.3–2.9× the chemical energy of their input across the whole gas ladder. Under UNITS.md this is a direct breach of objective O2, and it is the single clearest "free energy" defect the audit has found.
+
+This also rules out the two benign explanations for A6's offset. It is not efficiency headroom, since efficiency is declared near unity. It could still be a compressed-gas basis — declaring GT's gas fluids to sit at ≈ 2.5 bar rather than 1 atm would rescale every gas at once, exactly as A2 does for steam. But the A6 residuals span 1.82 to 2.90, so a single pressure declaration would leave a ±25 % per-species error, against A2's 2 %. That is wide enough that the pressure story would be concealing a real spread rather than explaining it.
+
+**Disposition: correct.** Rebuild gas fuel energies from real lower heating values at 1 atm and let generator efficiency do only what efficiency does. The consequence is a uniform ≈ 2.3× reduction in gas generator output, which is a balance shift but a predictable and uniform one, and SCOPE §6 rule 1 permits making a step harder.
+
+**Second violation — efficiency scales backwards.** GregTech makes larger turbines *worse*: 95 % at LV falling to 50 % at IV. Real thermal plant runs the other way, since larger machines support higher pressure ratios, reheat and combined cycles — small engines reach roughly 30 % while combined-cycle plant exceeds 60 %. Combined with A4's doubling of energy cost per overclock tier, GregTech systematically penalizes scale where reality rewards it.
+
+**Disposition: open.** Inverting the efficiency ladder is physically correct but interacts with progression pacing across every generator tier, so it needs its own analysis rather than a quick flip.
+
 ### Why this matters beyond fuels
 
 A6 answers the question that opened this work. The observed inconsistency between battery filling, NEI costs and water heating is not evidence that GregTech was built without physics — the gas ladder shows real chemistry underneath. It is evidence that **GregTech's physics is correct within a phase and breaks across phases**, because the one quantity that relates volume to energy — density — was never modelled. Supplying it is the highest-leverage correction available.
@@ -108,7 +122,8 @@ A6 answers the question that opened this work. The observed inconsistency betwee
 
 - **Recipe temperature requirements** — must be enumerated before A1 can be actioned, since the two changes are coupled.
 - **NEI displayed recipe costs** and **water-heating energy** — the two other inconsistencies observed in play; not yet traced to source.
-- **The ≈ 2.3 gas offset** — determine whether it is a compressed-gas basis, generator-efficiency headroom, or an arbitrary constant.
-- **Generator efficiencies per tier** — needed to convert `FUEL_VALUE` into delivered energy, since the raw value is pre-efficiency.
+- ~~The ≈ 2.3 gas offset~~ — resolved in A7. Not efficiency headroom; a compressed-gas reinterpretation was considered and rejected on residual spread.
+- ~~Generator efficiencies per tier~~ — extracted; see A7.
+- **Inverting the efficiency ladder (A7, second violation)** — physically correct, but touches every generator tier's pacing. Needs its own analysis.
 - **Recipe temperature requirements** — must be enumerated before A1 can be actioned, since the two changes are coupled.
 - **NEI displayed recipe costs** and **water-heating energy** — the two other inconsistencies observed in play; not yet traced to source.
