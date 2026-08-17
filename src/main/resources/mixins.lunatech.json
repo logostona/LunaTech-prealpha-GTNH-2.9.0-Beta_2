@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "minVersion": "0.8.5-GTNH",
+  "package": "lunatech.mixins",
+  "refmap": "mixins.lunatech.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": ["MixinTooltipHelper"],
+  "client": [],
+  "server": []
+}

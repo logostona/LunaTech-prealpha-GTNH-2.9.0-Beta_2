@@ -35,6 +35,14 @@ This build has **absorbed many former addons into the single GregTech jar**, all
 
 Resource files are token-expanded by the convention plugin. The valid tokens are `${modVersion}`, `${minecraftVersion}` and `${modName}` — *not* `${version}` or `${mcversion}`, which fail `:processResources` with an unhelpful "could not copy file" error.
 
+## Mixins
+
+`usesMixins = true` makes the convention generate the refmap and write `MixinConfigs: mixins.<modid>.json` into the manifest. It does **not** generate that config — GregTech commits `mixins.gregtech*.json` by hand and so must we (`src/main/resources/mixins.lunatech.json`).
+
+Omitting it compiles, passes every test and produces a jar, then **prevents the game from starting** with "The specified resource 'mixins.lunatech.json' was invalid or could not be read". `MixinConfigTest` now closes that gap: it asserts the config exists, that every class it names is in the build, and that every mixin in the build is registered.
+
+Mixins targeting GregTech need `remap = false` — GregTech is a mod, not obfuscated Minecraft, so its names must not go through SRG mapping.
+
 ## Formatting (Spotless, enforced by CI)
 
 Import order is `java, javax, net, org, com`, with unmatched packages (`cpw`, `lunatech`) **last**, blank line between groups. Static imports first.
