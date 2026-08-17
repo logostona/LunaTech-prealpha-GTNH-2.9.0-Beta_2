@@ -138,24 +138,26 @@ GregTech's UI strings are lang keys with the number formatted separately in Java
 
 Delivery is a lang file in the `gregtech` resource domain inside LunaTech's own jar. LunaTech declares `required-after:gregtech`, so its resource pack applies after GregTech's and these keys win. ✅ Confirmed in a running instance: NEI shows `Total: 400 J` for a recipe drawing 4 EU/t for 5 s, which is 400 EU and therefore 400 J.
 
-**Energy, Java-driven — not done.** Not every unit label lives in a lang string, so the lang pass does not finish the energy half. The machine tooltip's `Capacity: 2,048 EU` comes from `gt.tileentity.eup_store=Capacity: %s`, where the lang string carries no unit at all and `TooltipHelper.euCapacityText` appends `" EU"` in Java. Changing it requires code, hence D2.
+**Energy, Java-driven — done via mixin.** Not every unit label lives in a lang string, so the lang pass does not finish the energy half. The machine tooltip's `Capacity: 2,048 EU` comes from `gt.tileentity.eup_store=Capacity: %s`, where the lang string carries no unit at all and `TooltipHelper.euCapacityText` appends `" EU"` in Java. Changing it required code, which is what resolved D2.
 
-`TooltipHelper` is nonetheless a good target, because it is central and lightly used:
-
-| Method | Hardcodes | Call sites |
-|---|---|---|
-| `euCapacityText` | `" EU"` | 1 |
-| `euRateText` | `" EU/t"` | 4 |
-| `euText` | nothing | 3 |
-| `voltageText` | nothing | 5 |
-
-A single mixin on this one class therefore relabels the tooltip capacity *and* converts the rate lines to watts — covering part of both halves at once. Beyond it sits a scattered remainder of about eight hand-built `" EU"` concatenations in `goodgenerator`, the ModularUI panels and a few generators, which have no central seam.
+`TooltipHelper` is a good target because it is central and lightly used — `euCapacityText` (1 call site) hardcodes `" EU"` and `euRateText` (4) hardcodes `" EU/t"`, while `euText` and `voltageText` add no unit at all.
 
 Five further keys mentioning EU were **deliberately left alone** as ambiguous — two "EU Usage" discount strings that may be rates, an unverified "EU Cost", a cable-loss "EU-Volt" that is loss per amp per block, and a magnet tooltip whose EU figure is a percentage. Mislabelling is worse than not labelling.
 
-**Power — not done.** Forty-two keys use `EU/t`, and watts are EU/t × 20, so the number itself must change. Relabelling without converting would state a falsehood, so those keys are untouched until the conversion exists. That requires intercepting GregTech's display code, hence mixins, hence D2. `EnergyLabelTest` fails the build if any override starts saying `EU/t`.
+**Power — done via mixins.** Watts are EU/t × 20, so the number itself must change and no language override can do it. Two mixins cover the main surfaces, both verified in a running instance:
 
-Note that `Voltage: %s EU/t` labels a power as a voltage even in stock GregTech. Converting it to watts is an improvement regardless, but calling anything volts depends on D11.
+| Mixin | Target | Effect |
+|---|---|---|
+| `MixinTooltipHelper` | `euCapacityText`, `euRateText` | ✅ tooltip `Capacity: 2,048 EU` → `2.05 kJ`; tooltip rates → watts |
+| `MixinEUNoOverclockDescriber` | `getEUtDisplay`, `getVoltageString` | ✅ NEI `Usage: 4 EU/t` → `Usage: 80 W` |
+
+The second is needed because NEI builds its recipe lines in the describer, formatting raw EU/t into a lang key — a path neither the language override nor `TooltipHelper` touches. Targeting `EUNoOverclockDescriber` covers the whole EU chain, since `EUOverclockDescriber` and `FusionOverclockDescriber` inherit those methods rather than overriding them.
+
+⚖️ **Where a mixin supplies the value, the lang key carries no unit of its own.** The unit travels with the value. If a mixin stops applying, the line reads as a bare number rather than a wrong unit — ambiguous beats false. `EnergyLabelTest` enforces the split: energy keys must state joules, mixin-valued keys must state no unit, and a key in neither set fails the build.
+
+**"Voltage" is relabelled rather than converted in place.** GregTech's `Voltage:` line is EU/t divided by amperage — a power per amp, not a potential — so it now reads `Per amp:` in watts. Naming a real voltage still depends on D11.
+
+**Known remainder**, each needing its own small mixin since no shared seam exists: about eight hand-built `" EU"` concatenations in `goodgenerator`, the ModularUI panels and a few generators; private `getEUtDisplay` copies in `BeamCrafterFrontend` and gtnhlanth's `TargetChamberFrontend`; and `MTEMassfabricator`'s own `getVoltageString`. Worth fixing opportunistically rather than pre-emptively.
 
 ## 8. Boundary with unreplaced content
 
