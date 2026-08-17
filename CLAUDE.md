@@ -59,6 +59,17 @@ Gradle 9.4.0 with GTNH convention plugins, requiring **JDK 17+**.
 
 Local build: set `JAVA_HOME` to `java-runtime-delta`, then `.\gradlew.bat build`.
 
+A build emits **four** jars into `build/libs/`. Only the unclassified one goes into a real instance:
+
+| Jar | Use |
+|---|---|
+| `lunatech-<ver>.jar` | **the mod** — multi-release, Java 8 bytecode |
+| `lunatech-<ver>-dev.jar` | development classpath only |
+| `lunatech-<ver>-sources.jar` | sources |
+| `lunatech-<ver>-predowngrade.jar` | pre-downgrade bytecode; **never** ship or install it |
+
+Copying `-predowngrade` into `mods/` puts a second jar declaring the same mod id on the classpath, with class files the 1.7.10 runtime cannot load. Filter on all three classifiers, not just `dev` and `sources`.
+
 CI also builds on JDK 21 and is the authority when they disagree. CI emits its own errors as annotations because job logs need repo admin auth to read, even on a public repo.
 
 Branches: `main` holds documentation only; `m1-toolchain` holds the scaffold and stays off `main` until it compiles.
