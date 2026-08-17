@@ -5,7 +5,7 @@
   "refmap": "mixins.lunatech.refmap.json",
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
-  "mixins": ["MixinTooltipHelper"],
+  "mixins": ["MixinTooltipHelper", "MixinEUNoOverclockDescriber"],
   "client": [],
   "server": []
 }

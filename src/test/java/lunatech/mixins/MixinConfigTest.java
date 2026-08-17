@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,8 @@ class MixinConfigTest {
     private static final String EXPECTED_PACKAGE = "lunatech.mixins";
 
     /** Every mixin expected in the build, named explicitly rather than scanned for. */
-    private static final List<String> EXPECTED_MIXINS = Collections.singletonList("MixinTooltipHelper");
+    private static final List<String> EXPECTED_MIXINS = Arrays
+        .asList("MixinTooltipHelper", "MixinEUNoOverclockDescriber");
 
     @Test
     @DisplayName("The mixin config the manifest promises actually exists and is valid JSON")

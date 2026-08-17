@@ -17,6 +17,16 @@
 #   GT5U.item.cable.loss.eu_volt  ("EU-Volt", loss per amp per block, not plain energy)
 #   gt.magnet.tooltip.base  (the EU figure there is a percentage, not a quantity)
 
+# --- Power lines: the unit travels with the value ---
+# These carry no unit of their own. MixinEUNoOverclockDescriber substitutes an SI power string
+# ("80 W") for the raw EU/t, so a unit here would duplicate or contradict it. If that mixin ever
+# stops applying these read as a bare number rather than as a wrong unit, which is the safer
+# failure. "Voltage" becomes "Per amp" because the quantity is EU/t per amp, a power, not a
+# potential -- see UNITS.md section 3.1 and D11.
+GT5U.nei.display.usage=Usage: %s %s
+GT5U.nei.display.voltage=Per amp: %s %s
+
+# --- Energy: a pure relabelling, correct only because 1 EU is exactly 1 J ---
 gt.item.desc.stored_eu=Contains %s J   Tier: %s
 gt.item.desc.eu_info=%s / %s J - Voltage: %s
 GT5U.nei.start_eu=Start: %s J (MK %s)
