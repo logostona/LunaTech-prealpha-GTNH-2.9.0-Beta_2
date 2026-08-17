@@ -147,8 +147,17 @@ Deliverable: [UNITS.md](UNITS.md) promoted from draft to normative, plus a machi
 
 Exit criteria: UNITS.md normative and source-verified; audit table complete with a disposition on every anchor; O1 satisfied; OC policy decided.
 
-### M1 — Toolchain & validation skeleton
-Buildable addon against GTNH 2.9.0-beta2 ❓ (toolchain — §9 D1), loading into a live instance, doing nothing but registering itself. Dataset loader, JUnit tolerance harness, and CI green. Performance baseline harness (§7) measured and budgets set.
+### M1 — Toolchain & validation skeleton *(in progress)*
+
+⚖️ **Toolchain settled (D1).** GTNH's own convention plugins, matching GT5U's build exactly: `com.gtnewhorizons.gtnhsettingsconvention` 2.0.24 in settings, `com.gtnewhorizons.gtnhconvention` in the build script, resolving from `nexus.gtnewhorizons.com`. Minecraft 1.7.10, Forge 10.13.4.1614, MCP `stable`/12, Gradle 9.4.0. Modern Java syntax via JVM Downgrader targeting Java 8 bytecode, with GTNHLib supplying stubs — identical to GT5U, so we compile the same way as the mod we extend. GT5U is pinned as `com.github.GTNewHorizons:GT5-Unofficial:5.09.52.594:dev`; bumping it invalidates [AUDIT.md](AUDIT.md) until re-verified.
+
+⚖️ **D2 deferred, deliberately.** `usesMixins = false` until the first behavioural change actually requires it. Enabling it later is a properties change plus a mixin source set. Deferring avoids a UniMixins dependency and mixin-debug build overhead that M1 does not use, and nothing in M1 changes machine behaviour.
+
+**Scaffolded:** build scripts, wrapper, mod entry point, `Units` (the single home of κ per UNITS.md §6 rule 2), and the first harness tests pinning the ratified constants.
+
+**Blocked on environment:** only a Java 8 JRE is present on this machine. Gradle 9.4.0 requires **JDK 17+** to run. Nothing has been compiled or executed yet — the scaffold is unverified until a JDK is installed.
+
+**Remaining:** first successful build; load into a live GTNH instance; dataset loader; CI workflow green; performance baseline (§7) measured and budgets set.
 
 ### M2 — Continuous-flow reactor (O4)
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
@@ -165,8 +174,8 @@ Inorganic/materials, nuclear, automation. Sequenced after M2's architecture is p
 
 | # | Decision | Why it matters | Owner |
 |---|---|---|---|
-| D1 | Build toolchain and Java target for a GTNH 2.9.0-beta2 addon (GTNHGradle / RetroFuturaGradle; Java 8 bytecode vs Java 17 toolchain) | Blocks M1 entirely | — |
-| D2 | Adopt UniMixins as a declared dependency from M1, or defer until a behavioural change actually needs it | Defines how invasive v1 can be | — |
+| ~~D1~~ | ~~Build toolchain and Java target~~ **Resolved:** GTNH convention plugins, Gradle 9.4.0 on JDK 17+, JVM Downgrader to Java 8 bytecode (M1) | Blocks M1 entirely | closed |
+| ~~D2~~ | ~~Adopt UniMixins from M1 or defer~~ **Resolved:** deferred; `usesMixins = false` until a behavioural change needs it (M1) | Defines how invasive v1 can be | closed |
 | D3 | Ratify the §3.1 error budgets | They are the reliability contract; drafted, not agreed | — |
 | D4 | Dataset format and versioning (JSON / CSV / other), and whether generation code lives in this repo or a sibling | Affects harness design and review ergonomics | — |
 | ~~D5~~ | ~~Does "harder than stock" count as invalidating a progression milestone?~~ **Resolved:** harder is permitted, earlier and cheaper are not (§6) | Governs every replacement decision | closed |

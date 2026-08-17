@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches: [main, "m1-*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The GTNH convention plugin derives the project version from git describe,
+          # so it needs history and tags rather than a shallow checkout.
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Split into stages so a failure log says which one broke: resolving the GT5U
+      # dependency, compiling, the validation harness, or formatting.
+      - name: Compile
+        run: ./gradlew --stacktrace compileJava compileTestJava
+
+      - name: Validation harness
+        run: ./gradlew --stacktrace test
+
+      - name: Full build
+        run: ./gradlew --stacktrace build
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/reports/tests/
+          if-no-files-found: ignore
