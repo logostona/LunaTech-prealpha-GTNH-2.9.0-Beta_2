@@ -47,7 +47,19 @@ Live instance for reference: `C:\Users\Computador\AppData\Roaming\PrismLauncher\
 
 ## Build
 
-Gradle 9.4.0 with GTNH convention plugins, requiring **JDK 17+**. This machine has only a Java 8 JRE, so **builds run in GitHub Actions, not locally**. CI emits its own errors as annotations because job logs need repo auth to read.
+Gradle 9.4.0 with GTNH convention plugins, requiring **JDK 17+**.
+
+`java` on PATH is only a Java 8 JRE, but **PrismLauncher has already downloaded full JDKs** and they work for building:
+
+| Path under `%APPDATA%\PrismLauncher\java\` | Version |
+|---|---|
+| `java-runtime-beta` | JDK 17.0.15 |
+| `java-runtime-delta` | JDK 21.0.7 — matches CI, prefer this |
+| `java-runtime-epsilon` | JDK 25.0.1 — what the GTNH instance runs on |
+
+Local build: set `JAVA_HOME` to `java-runtime-delta`, then `.\gradlew.bat build`.
+
+CI also builds on JDK 21 and is the authority when they disagree. CI emits its own errors as annotations because job logs need repo admin auth to read, even on a public repo.
 
 Branches: `main` holds documentation only; `m1-toolchain` holds the scaffold and stays off `main` until it compiles.
 

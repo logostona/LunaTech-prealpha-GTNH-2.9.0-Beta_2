@@ -84,6 +84,16 @@ jobs:
             | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::error::SPOTLESS DIFF%0A${DIFF}"
 
+      - name: Upload the built mod
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lunatech-jar
+          # The reobfuscated jar is the one that goes into a real instance.
+          # The -dev and -sources jars are for development classpaths only.
+          path: build/libs/*.jar
+          if-no-files-found: warn
+
       - name: Upload logs and test results
         if: always()
         uses: actions/upload-artifact@v4
