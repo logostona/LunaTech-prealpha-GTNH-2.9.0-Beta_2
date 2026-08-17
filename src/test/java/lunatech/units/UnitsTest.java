@@ -52,9 +52,7 @@ class UnitsTest {
         // compiled demand. This is objective O2 stated in code.
         double[] samples = { 0.0d, 0.1d, 0.5d, 1.0d, 1.5d, 999.999d, 1.05e6d };
         for (double joules : samples) {
-            assertTrue(
-                Units.euOutput(joules) <= Units.euDemand(joules),
-                "output exceeded demand at " + joules + " J");
+            assertTrue(Units.euOutput(joules) <= Units.euDemand(joules), "output exceeded demand at " + joules + " J");
         }
     }
 

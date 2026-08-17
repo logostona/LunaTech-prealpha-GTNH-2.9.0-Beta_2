@@ -75,10 +75,14 @@ jobs:
           echo "::group::spotless diff"
           git --no-pager diff
           echo "::endgroup::"
-          git --no-pager diff -U0 | head -n 80 | while IFS= read -r l; do
-            clean=$(printf '%s' "$l" | tr -d '\r' | sed 's/%/%25/g')
-            echo "::error::SPOTLESS ${clean}"
-          done
+          # GitHub caps annotations at 10 per step, which silently truncates a
+          # line-per-annotation diff and hides later files. Emit the whole diff as a
+          # single annotation instead, with newlines percent-encoded.
+          DIFF=$(git --no-pager diff | head -c 8000 \
+            | tr -d '\r' \
+            | sed 's/%/%25/g' \
+            | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error::SPOTLESS DIFF%0A${DIFF}"
 
       - name: Upload logs and test results
         if: always()
