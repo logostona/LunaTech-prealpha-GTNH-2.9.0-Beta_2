@@ -155,9 +155,13 @@ Exit criteria: UNITS.md normative and source-verified; audit table complete with
 
 **Scaffolded:** build scripts, wrapper, mod entry point, `Units` (the single home of κ per UNITS.md §6 rule 2), and the first harness tests pinning the ratified constants.
 
-**Blocked on environment:** only a Java 8 JRE is present on this machine. Gradle 9.4.0 requires **JDK 17+** to run. Nothing has been compiled or executed yet — the scaffold is unverified until a JDK is installed.
+✅ **Build verified in CI.** The dev machine has only a Java 8 JRE and Gradle 9.4.0 requires JDK 17+, so builds run in GitHub Actions on JDK 21 rather than locally. Compile, the validation harness, and the full build (including Spotless and Checkstyle) all pass on `m1-toolchain`. This confirms in practice what D1 settled on paper: the GT5U coordinate resolves, LunaTech compiles against it, and JVM Downgrader produces Java 8 bytecode.
 
-**Remaining:** first successful build; load into a live GTNH instance; dataset loader; CI workflow green; performance baseline (§7) measured and budgets set.
+The five `UnitsTest` assertions passing means κ, the matter basis, the tier ladder, the no-free-energy rounding invariant, and the iron-melt pacing figure are now machine-enforced rather than prose — §3's harness requirement is live, not aspirational.
+
+**Note on CI diagnostics.** GitHub gates Actions job logs behind repository admin auth even for public repos, so the workflow republishes failures through the public annotations API. Annotations are capped at 10 per step, so the whole diff goes into a single annotation; emitting one per line truncates silently and produces confidently wrong conclusions.
+
+**Remaining:** load into a live GTNH instance; dataset loader (blocked on D4); performance baseline (§7) measured and budgets set.
 
 ### M2 — Continuous-flow reactor (O4)
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
