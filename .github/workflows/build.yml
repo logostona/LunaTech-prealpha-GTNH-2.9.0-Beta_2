@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # The GTNH convention plugin derives the project version from git describe,
           # so it needs history and tags rather than a shallow checkout.
           fetch-depth: 0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -26,21 +26,47 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Split into stages so a failure log says which one broke: resolving the GT5U
-      # dependency, compiling, the validation harness, or formatting.
+      # Staged so a failure says which thing broke: resolving GT5U, compiling,
+      # the validation harness, or formatting. Output is teed to a log because
+      # GitHub gates job logs behind repo auth, and the failure step below
+      # republishes the relevant lines as annotations, which are public.
       - name: Compile
-        run: ./gradlew --stacktrace compileJava compileTestJava
+        run: |
+          set -o pipefail
+          ./gradlew --stacktrace compileJava compileTestJava 2>&1 | tee -a gradle-output.log
 
       - name: Validation harness
-        run: ./gradlew --stacktrace test
+        run: |
+          set -o pipefail
+          ./gradlew --stacktrace test 2>&1 | tee -a gradle-output.log
 
       - name: Full build
-        run: ./gradlew --stacktrace build
+        run: |
+          set -o pipefail
+          ./gradlew --stacktrace build 2>&1 | tee -a gradle-output.log
 
-      - name: Upload test results
+      - name: Surface failure as annotations
+        if: failure()
+        run: |
+          if [ ! -f gradle-output.log ]; then
+            echo "::error::No gradle output captured; the failure happened before Gradle ran."
+            exit 0
+          fi
+          echo "::group::Last 150 lines"
+          tail -n 150 gradle-output.log
+          echo "::endgroup::"
+          grep -nE "error:|FAILURE:|Caused by:|Could not |Execution failed|\.java:[0-9]+|Unresolved|cannot find symbol" \
+            gradle-output.log | head -n 30 | while IFS= read -r line; do
+              clean=$(printf '%s' "$line" | tr -d '\r' | sed 's/%/%25/g; s/\r/%0D/g')
+              echo "::error::${clean}"
+            done
+
+      - name: Upload logs and test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: build/reports/tests/
+          name: build-output
+          path: |
+            gradle-output.log
+            build/reports/
           if-no-files-found: ignore
