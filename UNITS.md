@@ -127,8 +127,22 @@ SI → EU compilation happens once, at registration. Rules:
 
 - Power in W with SI prefixes; energy in J with SI prefixes; temperature in K.
 - Mass in kg, amount in mol, volume in L.
-- ❓ Whether EU remains visible at all — hidden entirely, or behind a debug toggle (§9 D12). Recommendation: debug toggle only.
+- ⚖️ **D12 resolved: EU is not shown.** GregTech's own text is relabelled to SI rather than supplemented with it.
 - Values shown to the player are the authored SI values, never back-converted from the compiled EU integer. Back-conversion would surface rounding artefacts as if they were physics.
+
+### 7.1 Relabelling GregTech's existing text
+
+GregTech's UI strings are lang keys with the number formatted separately in Java, which splits the work in two.
+
+**Energy — done, and free.** Nine keys stating a plain energy quantity (`Total: %s EU`, `Contains %s EU`, stored-energy readouts, fusion start cost, fuel value) are overridden to say joules. Because κ = 1, the displayed number is *already* joules, so this is a pure relabelling with no arithmetic and no code interception. It is worth being explicit that this only works at κ = 1; any other definition would have made this half a code change too.
+
+Delivery is a lang file in the `gregtech` resource domain inside LunaTech's own jar. LunaTech declares `required-after:gregtech`, so its resource pack applies after GregTech's and these keys win.
+
+Five further keys mentioning EU were **deliberately left alone** as ambiguous — two "EU Usage" discount strings that may be rates, an unverified "EU Cost", a cable-loss "EU-Volt" that is loss per amp per block, and a magnet tooltip whose EU figure is a percentage. Mislabelling is worse than not labelling.
+
+**Power — not done.** Forty-two keys use `EU/t`, and watts are EU/t × 20, so the number itself must change. Relabelling without converting would state a falsehood, so those keys are untouched until the conversion exists. That requires intercepting GregTech's display code, hence mixins, hence D2. `EnergyLabelTest` fails the build if any override starts saying `EU/t`.
+
+Note that `Voltage: %s EU/t` labels a power as a voltage even in stock GregTech. Converting it to watts is an improvement regardless, but calling anything volts depends on D11.
 
 ## 8. Boundary with unreplaced content
 

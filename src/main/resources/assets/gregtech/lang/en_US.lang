@@ -1,0 +1,28 @@
+# LunaTech display overrides for GregTech's energy text.
+#
+# These live in the "gregtech" resource domain deliberately: LunaTech declares
+# required-after:gregtech, so its resource pack is applied after GregTech's and these keys win.
+#
+# Only quantities that are ENERGY are relabelled. Because UNITS.md section 2 defines
+# 1 EU as exactly 1 joule, the displayed number is already in joules and no arithmetic is
+# involved -- this is a pure relabelling and is only correct because kappa is 1.
+#
+# POWER (EU/t) is deliberately NOT touched here. Watts are EU/t x 20, so the number itself
+# must change; relabelling those keys without converting would be worse than leaving them.
+# That is half 2, and it needs mixins. See UNITS.md section 7.
+#
+# Deliberately excluded as ambiguous -- do not add without checking what they measure:
+#   GT5U.MBTT.EuDiscount.Base / .Additional  ("EU Usage", may be a rate)
+#   GT5U.tooltip.nac.module.optical_organizer.body.water78  ("EU Cost", unverified)
+#   GT5U.item.cable.loss.eu_volt  ("EU-Volt", loss per amp per block, not plain energy)
+#   gt.magnet.tooltip.base  (the EU figure there is a percentage, not a quantity)
+
+gt.item.desc.stored_eu=Contains %s J   Tier: %s
+gt.item.desc.eu_info=%s / %s J - Voltage: %s
+GT5U.nei.start_eu=Start: %s J (MK %s)
+GT5U.nei.fuel=Fuel Value: %s J
+GT5U.nei.display.total=Total: %s J
+GT5U.scanner.ic2_info_2=Contained Energy: §6%s J §f/ §6%s J
+GT5U.scanner.energy_info_3=Energy: §6%s J §f/ §6%s J
+GT5U.infodata.battery_buffer.stored_items=Stored Items: %s J / %s J
+GT5U.infodata.energy=Stored Energy: %s J / %s J

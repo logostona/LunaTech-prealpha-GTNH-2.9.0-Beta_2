@@ -197,6 +197,6 @@ Inorganic/materials, nuclear, automation. Sequenced after M2's architecture is p
 | D8 | Standard-overclock energy policy: real efficiency loss, or override? | Interacts with UNITS.md §6 rounding; constrains every energy claim | — |
 | D9 | Versioning and release scheme for a pre-alpha pinned to a GTNH beta | Users need to know what pairs with what | — |
 | D11 | Expose real voltage classes per tier, or power-only? (UNITS.md §3.1) | Option (a) needs a story for tiers above UHV | — |
-| D12 | Does EU stay visible in the UI — hidden, or debug toggle? (UNITS.md §7) | Player-facing consequence of the SI-display decision | — |
+| ~~D12~~ | ~~Does EU stay visible in the UI?~~ **Resolved: no.** GregTech's text is relabelled to SI. Energy keys done (UNITS.md §7.1); power keys await D2 | Player-facing consequence of the SI-display decision | closed |
 
 **Closed by [UNITS.md](UNITS.md):** the J-per-EU value (declared, not derived — §2), the matter basis (1 mB ≡ 1 mL — §4), and the SI-authoring direction (§1). The former D8 "chosen anchor" question is void: there is no anchor to choose, because stock GTNH is self-inconsistent (§5).
