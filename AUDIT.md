@@ -54,10 +54,61 @@ Dispositions: **correct** (replace) · **accept** (physically defensible as-is) 
 
 **Disposition: correct.** Replace with an Arrhenius rate model parameterized by per-reaction activation energy. This is directly downstream of the "reaction kinetics" commitment in PHILOSOPHY §3 Pillar I, and it is the natural bridge from M0 into M2's continuous-flow reactor, where rate laws are the core mechanic.
 
+## A6 — Gas fuel values track real chemistry to ±20 %; liquid fuel values are meaningless because GregTech has no density
+
+**Stock:** fuel energy is set by `MaterialBuilder.setFuel(FuelType, fuelPower)` in `MaterialsInit.java` and auto-registered through the `FUEL_VALUE` metadata key. Semantics verified at `MTEBasicGenerator.java:262-277`: `consumedFluidPerOperation` returns **1**, and fuel energy is `FUEL_VALUE × efficiency × 1 / 100`. So **`FUEL_VALUE` is EU per millibucket** — under UNITS.md, joules per mL, i.e. **kJ per litre** at 100 % efficiency.
+
+### Gases — compared against real lower heating value as an ideal gas at STP (22.414 L/mol)
+
+| Fuel | GT (kJ/L) | Real LHV (kJ/L) | GT ÷ real |
+|---|---|---|---|
+| Hydrogen | 20 | 10.8 | 1.85 |
+| Carbon monoxide | 24 | 12.6 | 1.90 |
+| Methane | 104 | 35.8 | 2.90 |
+| Ethylene | 128 | 59.0 | 2.17 |
+| Ethane | 168 | 63.7 | 2.64 |
+| Propene | 192 | 85.9 | 2.23 |
+| Butadiene | 206 | 113.4 | 1.82 |
+| Propane | 232 | 91.2 | 2.54 |
+| Butane | 296 | 118.6 | 2.50 |
+| Toluene | 328 | 168.3 | 1.95 |
+| Benzene | 360 | 141.4 | 2.55 |
+
+**Eleven independent gases, ratios spanning 1.82 to 2.90, mean ≈ 2.3.** This is not a coincidence and not arbitrary balance: GregTech's gas fuel ladder is *ordered and scaled by real combustion enthalpy*, offset by a near-constant factor. Note that benzene and toluene — liquids at room temperature — fit the same cluster only when treated as ideal gases at STP, which confirms the phase convention rather than contradicting it.
+
+**Disposition: reinterpret, then rescale by one constant.** The ordering is already physically correct. The residual factor of ≈ 2.3 is a single global correction, not 11 separate ones, and its origin is a follow-up question (a compressed-gas basis, or a deliberate generator-efficiency headroom, would both produce a constant offset of roughly this size).
+
+### Liquids — compared against real LHV as a liquid
+
+| Fuel | GT (kJ/L) | Real LHV (kJ/L) | GT ÷ real |
+|---|---|---|---|
+| Methanol | 84 | ≈ 15 800 | 1/188 |
+| Ethanol | 192 | ≈ 21 100 | 1/110 |
+| Light Fuel | 305 | ≈ 35 300 | 1/116 |
+| Biodiesel | 320 | ≈ 33 000 | 1/103 |
+| Fuel (diesel) | 480 | ≈ 35 800 | 1/75 |
+| Gasoline | 576 | ≈ 32 300 | 1/56 |
+| Octane | 80 | ≈ 31 200 | 1/390 |
+
+**Violation:** liquid fuels sit on roughly the same numeric scale as gases despite holding some 600–1000× more mass per litre. The cause is structural, not a balance error — **GregTech has no density, so energy-per-volume cannot be consistent across phases.** This is the same missing quantity identified in UNITS.md §4, now visible as a concrete defect.
+
+**Internal contradiction, independent of any real-world comparison:** octane is rated 80 while gasoline is rated 576, though octane is essentially the principal component of gasoline — a 7× disagreement inside GregTech's own data.
+
+**Also noted:** `NatruralGas` (spelled thus in source) is rated 20 kJ/L against methane's 104, though natural gas is predominantly methane. It falls far outside the gas cluster and looks like a straightforward error.
+
+**Disposition: correct.** Liquid fuel energies must be rebuilt from density × mass-specific LHV once the matter basis is in force. This is the single largest quantitative correction the audit has identified, and it is a direct consequence of adopting 1 mB ≡ 1 mL.
+
+### Why this matters beyond fuels
+
+A6 answers the question that opened this work. The observed inconsistency between battery filling, NEI costs and water heating is not evidence that GregTech was built without physics — the gas ladder shows real chemistry underneath. It is evidence that **GregTech's physics is correct within a phase and breaks across phases**, because the one quantity that relates volume to energy — density — was never modelled. Supplying it is the highest-leverage correction available.
+
 ---
 
 ## Outstanding
 
-- **Chemical fuel energy values** — the last M0 item. Mechanism located (`Materials.mFuelPower` / `mFuelType`, auto-registered through `GTItemIterator` into the `Fuel` map via the `FUEL_VALUE` key), values not yet extracted. Requires walking the `Materials` enum. These are the anchors with genuine real-world lower heating values to compare against, so they are the highest-value remaining audit input.
+- **Recipe temperature requirements** — must be enumerated before A1 can be actioned, since the two changes are coupled.
+- **NEI displayed recipe costs** and **water-heating energy** — the two other inconsistencies observed in play; not yet traced to source.
+- **The ≈ 2.3 gas offset** — determine whether it is a compressed-gas basis, generator-efficiency headroom, or an arbitrary constant.
+- **Generator efficiencies per tier** — needed to convert `FUEL_VALUE` into delivered energy, since the raw value is pre-efficiency.
 - **Recipe temperature requirements** — must be enumerated before A1 can be actioned, since the two changes are coupled.
 - **NEI displayed recipe costs** and **water-heating energy** — the two other inconsistencies observed in play; not yet traced to source.
