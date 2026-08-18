@@ -9,7 +9,9 @@ A GregTech 5 Unofficial **addon** for GTNH 2.9.0-beta2 (Minecraft 1.7.10). Not a
 | `PHILOSOPHY.md` | Intent only. Non-normative. |
 | `SCOPE.md` | **Authoritative**: what gets built, milestones, open-decisions register. |
 | `UNITS.md` | Normative unit system. Any value contradicting it is a defect. |
-| `AUDIT.md` | Stock GTNH defects, findings A1–A7, each with a disposition. |
+| `AUDIT.md` | Stock GTNH defects, findings A1–A8, each with a disposition. |
+| `DATA.md` | Dataset schema, provenance and versioning rules. |
+| `REFERENCE.md` | **Paths, verified source coordinates, commands, traps by symptom.** Look here first. |
 
 Where PHILOSOPHY and SCOPE appear to disagree, SCOPE governs.
 
@@ -23,13 +25,15 @@ Where PHILOSOPHY and SCOPE appear to disagree, SCOPE governs.
 - **Replacement of stock GTNH content is permitted**, but requires an AUDIT.md entry naming the *specific physical violation* first. "Feels wrong" is not a justification.
 - **Progression may be made harder, never earlier or cheaper.**
 - Standard overclocking is retained and read as entropy production (D8).
-- Mixins deferred (`usesMixins = false`) until a behavioural change needs them (D2).
+- Mixins are **on** (D2 resolved). Five of them convert GregTech's display to SI; see REFERENCE.md section 5 for the target and ordinal map.
 
 ## Reference source — grep, don't guess
 
 GT5U source is vendored **outside git** at `D:\LunaTech\vendor\GT5-Unofficial`, shallow-cloned at tag `5.09.52.594` — the exact build GTNH 2.9.0-beta2 ships.
 
 Class names dropped their `GT_` prefixes in this build: `GTValues`, `GTRecipe`, `OverclockCalculator`, `HeatingCoilLevel`, `MTEBasicGenerator`.
+
+**Never cite a GregTech value that has not been read from that tree.** Cite as `file:line`; REFERENCE.md section 3 holds the ones already verified.
 
 This build has **absorbed many former addons into the single GregTech jar**, all therefore in scope: bartworks (+ its cross-mod modules), tectech, GT++ (`miscutils`), goodgenerator, ggfab, kekztech, kubatech, gtnhlanth, galacticgreg, gtnhintergalactic, gtneioreplugin and detravscannermod. The full list is the `modList` in `src/main/resources/mcmod.info` of the vendored source.
 
@@ -50,10 +54,6 @@ Import order is `java, javax, net, org, com`, with unmatched packages (`cpw`, `l
 **Line endings: LF only.** Spotless rejects CRLF, but `.gitattributes` normalises to LF on commit. So a file written with CRLF **passes CI** (which checks out LF) and **fails the local build**, while `git diff` shows nothing because the committed content is already correct. Windows tooling writing in text mode introduces this silently. Normalise the working copy to LF before building; a byte-identical `git diff` alongside a Spotless failure is the signature.
 
 The Eclipse 4.19 profile **wraps any chain of two or more method calls onto separate lines**, regardless of line length. `Datasets.materials().require("iron")` becomes two lines. Prefer writing a single-call accessor or a local variable over accepting the wrap — `Datasets.material("iron")` and `String t = s.trim(); t.isEmpty()` both read better than what the formatter produces.
-
-Live instance for reference: `C:\Users\Computador\AppData\Roaming\PrismLauncher\instances\GTNH 2.9.0`
-
-**Never cite a GregTech value that has not been read from that tree.** Cite as `file:line`.
 
 ## Build
 
@@ -86,7 +86,7 @@ Note also that Gradle cannot run inside the agent's sandbox — it needs a loopb
 
 CI also builds on JDK 21 and is the authority when they disagree. CI emits its own errors as annotations because job logs need repo admin auth to read, even on a public repo.
 
-Branches: `main` holds documentation only; `m1-toolchain` holds the scaffold and stays off `main` until it compiles.
+Everything lives on `main`; the `m1-toolchain` branch was merged once it built.
 
 GT5U is pinned as `com.github.GTNewHorizons:GT5-Unofficial:5.09.52.594:dev`. Bumping it invalidates AUDIT.md until re-verified.
 
