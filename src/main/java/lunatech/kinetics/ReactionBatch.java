@@ -35,6 +35,12 @@ public final class ReactionBatch {
      * <p>
      * Returning the remainder is the point of modelling conversion at all. A reaction that stops
      * short leaves something behind, and quietly destroying it would make the kinetics decorative.
+     * <p>
+     * The remainder is computed as <em>feed minus what reacted</em>, never as feed times one minus
+     * conversion. Those are the same number in algebra and not in binary floating point: at a
+     * conversion of 0.8, {@code 1.0 - 0.8} is 0.19999999999999996, which floors to 199 mB against a
+     * 1000 mB feed and quietly destroys a millibucket of matter every batch. Subtracting instead
+     * makes conservation exact by construction rather than by luck of representation.
      */
     public static List<BatchAmount> outputs(Reaction reaction, double conversion) {
         requireUsable(reaction);
@@ -44,21 +50,36 @@ public final class ReactionBatch {
         double basis = basisOf(reaction);
 
         Map<String, BatchAmount> merged = new LinkedHashMap<String, BatchAmount>();
-        accumulate(merged, reaction.products, basis, conversion);
-        accumulate(merged, reaction.reactants, basis, 1.0d - conversion);
-
-        List<BatchAmount> result = new ArrayList<BatchAmount>();
-        for (BatchAmount amount : merged.values()) {
-            if (amount.millibuckets > 0L) {
-                result.add(amount);
-            }
+        for (ReactionComponent component : reaction.products) {
+            long produced = (long) Math.floor(component.moles * basis * conversion);
+            add(merged, component, produced);
         }
-        return result;
+        for (ReactionComponent component : reaction.reactants) {
+            long taken = (long) Math.floor(component.moles * basis);
+            long reacted = (long) Math.floor(component.moles * basis * conversion);
+            add(merged, component, taken - reacted);
+        }
+        return positive(merged);
     }
 
     private static List<BatchAmount> amounts(List<ReactionComponent> components, double basis, double factor) {
         Map<String, BatchAmount> merged = new LinkedHashMap<String, BatchAmount>();
-        accumulate(merged, components, basis, factor);
+        for (ReactionComponent component : components) {
+            add(merged, component, (long) Math.floor(component.moles * basis * factor));
+        }
+        return positive(merged);
+    }
+
+    private static void add(Map<String, BatchAmount> into, ReactionComponent component, long millibuckets) {
+        BatchAmount existing = into.get(component.material);
+        long total = millibuckets;
+        if (existing != null) {
+            total = total + existing.millibuckets;
+        }
+        into.put(component.material, new BatchAmount(component.material, component.phase, total));
+    }
+
+    private static List<BatchAmount> positive(Map<String, BatchAmount> merged) {
         List<BatchAmount> result = new ArrayList<BatchAmount>();
         for (BatchAmount amount : merged.values()) {
             if (amount.millibuckets > 0L) {
@@ -66,19 +87,6 @@ public final class ReactionBatch {
             }
         }
         return result;
-    }
-
-    private static void accumulate(Map<String, BatchAmount> into, List<ReactionComponent> components, double basis,
-        double factor) {
-        for (ReactionComponent component : components) {
-            long millibuckets = (long) Math.floor(component.moles * basis * factor);
-            BatchAmount existing = into.get(component.material);
-            long total = millibuckets;
-            if (existing != null) {
-                total = total + existing.millibuckets;
-            }
-            into.put(component.material, new BatchAmount(component.material, component.phase, total));
-        }
     }
 
     private static double basisOf(Reaction reaction) {

@@ -98,19 +98,26 @@ class ReactionBatchTest {
     }
 
     @Test
-    @DisplayName("Flooring can never manufacture matter")
-    void flooringIsConservative() {
-        // A conversion that does not divide evenly into the basis.
-        List<BatchAmount> outputs = ReactionBatch.outputs(shift(), 0.3333d);
-        long total = 0L;
-        for (BatchAmount amount : outputs) {
-            total = total + amount.millibuckets;
+    @DisplayName("Nothing is created or destroyed, at any conversion")
+    void conservationHoldsEverywhere() {
+        long fed = total(ReactionBatch.feed(shift()));
+
+        // 0.8 is the value that first exposed this: 1.0 - 0.8 is 0.19999999999999996, so computing
+        // the remainder as feed x (1 - conversion) floored to 199 mB and destroyed a millibucket
+        // every batch. Sweeping catches the whole family rather than the one case that was noticed.
+        double[] conversions = { 0.0d, 0.1d, 0.2d, 0.3d, 0.3333d, 0.5d, 0.7d, 0.8d, 0.9d, 0.95d, 0.99d, 1.0d };
+        for (double conversion : conversions) {
+            long out = total(ReactionBatch.outputs(shift(), conversion));
+            assertEquals(fed, out, "matter was created or destroyed at conversion " + conversion);
         }
-        long fed = 0L;
-        for (BatchAmount amount : ReactionBatch.feed(shift())) {
-            fed = fed + amount.millibuckets;
+    }
+
+    private static long total(List<BatchAmount> amounts) {
+        long sum = 0L;
+        for (BatchAmount amount : amounts) {
+            sum = sum + amount.millibuckets;
         }
-        assertTrue(total <= fed, "outputs " + total + " exceeded feed " + fed);
+        return sum;
     }
 
     @Test
