@@ -216,7 +216,13 @@ Note on JDKs: `java` on PATH is a Java 8 JRE, but PrismLauncher had already down
 
 ✅ **Process model built and tested.** `Arrhenius` and `ContinuousReactor` compute conversion from temperature and residence time, anchored on a per-reaction operating point, with a declared equilibrium ceiling. This is the part that makes a reactor more than a recipe with a timer, and it is pure logic, so it is fully covered by the harness without a running game.
 
-**Remaining: the in-game shell.** A GregTech multiblock is a substantial piece of Minecraft work in its own right — StructureLib definition, metatile class, GUI, recipe map registration, textures — and none of it can be verified by CI. It is deliberately separated from the physics rather than bundled with it.
+**Shell, stage 1 — forms and reports.** `MTEContinuousFlowReactor` is a 3x3x3 multiblock: chemically inert casings, a five-block heating coil ring around a hollow reactor volume, controller front centre. Its info panel reads out the coil temperature, the Arrhenius rate multiplier there, and the conversion that implies, so the kinetics are visible in game rather than only in tests.
+
+⚠️ **It does not process yet, and that is deliberate.** The GregTech processing pipeline is built around a recipe map; a rate-driven reactor is not. Bolting custom processing onto a mechanism that does not fit it is how the physics would quietly become decorative, so processing is a separate stage.
+
+**Metatile ids.** LunaTech reserves 20001–20100, chosen by scanning the whole GT5U tree for four- and five-digit literals and taking a block inside the largest span nothing mentions. Ids live in world data, so registration also verifies the slot is empty at runtime and refuses rather than overwrites — a silent collision would turn another mod's machines into ours on the next world load.
+
+**CI cannot verify any of this beyond compilation.** Forming, rendering and the info panel all need the game.
 
 **Still unmodelled from the original description:** pressure, side products, catalyst degradation and thermal dissipation. The model is first-order, isothermal plug flow with no volume change, and DATA.md and the class javadoc both say so.
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
