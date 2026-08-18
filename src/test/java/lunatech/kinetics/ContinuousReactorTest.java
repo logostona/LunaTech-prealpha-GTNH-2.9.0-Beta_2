@@ -24,10 +24,12 @@ class ContinuousReactorTest {
     @Test
     @DisplayName("Doubling residence time raises conversion, without ever reaching one")
     void longerResidenceConvertsMore() {
-        Reaction shift = Datasets.reaction("water_gas_shift");
-        double once = ContinuousReactor.conversion(shift, 673.0d, 60.0d);
-        double twice = ContinuousReactor.conversion(shift, 673.0d, 120.0d);
-        assertEquals(0.96d, twice, 1.0e-3d);
+        // Reforming rather than shift: shift declares a 0.95 ceiling that masks the rate law here.
+        Reaction reforming = Datasets.reaction("steam_methane_reforming");
+        double once = ContinuousReactor.conversion(reforming, 1123.0d, 30.0d);
+        double twice = ContinuousReactor.conversion(reforming, 1123.0d, 60.0d);
+        assertEquals(0.70d, once, 1.0e-9d);
+        assertEquals(0.91d, twice, 1.0e-3d);
         assertTrue(twice > once);
         assertTrue(twice < 1.0d);
     }
@@ -50,12 +52,20 @@ class ContinuousReactorTest {
     }
 
     @Test
-    @DisplayName("Without a ceiling, conversion approaches but never reaches one")
+    @DisplayName("Without a ceiling, conversion stays below one until double precision runs out")
     void uncappedApproachesUnity() {
         Reaction reforming = Datasets.reaction("steam_methane_reforming");
-        double veryLong = ContinuousReactor.conversion(reforming, 1123.0d, 100_000.0d);
-        assertTrue(veryLong > 0.999d, "expected near-complete conversion, got " + veryLong);
-        assertTrue(veryLong < 1.0d, "conversion must never reach exactly one");
+
+        // At a realistic hold the asymptote is visible: high, and strictly short of complete.
+        double held = ContinuousReactor.conversion(reforming, 1123.0d, 300.0d);
+        assertTrue(held > 0.99d, "expected near-complete conversion, got " + held);
+        assertTrue(held < 1.0d, "conversion should not reach one at a realistic residence time");
+
+        // At an absurd hold, exp(-Da) underflows and the result rounds to exactly 1.0. Documented
+        // in ContinuousReactor rather than clamped, since the unconverted fraction there is far
+        // below anything representable.
+        double absurd = ContinuousReactor.conversion(reforming, 1123.0d, 100_000.0d);
+        assertEquals(1.0d, absurd, 0.0d);
     }
 
     @Test

@@ -18,6 +18,12 @@ import lunatech.data.Reaction;
  * <p>
  * Real reactions of other orders, non-isothermal operation, and mass-transfer limitation are all
  * outside this model. It is a first-order approximation in both senses of the phrase.
+ * <p>
+ * Conversion is asymptotic and never physically reaches one, but it does <em>numerically</em>: once
+ * Da exceeds about 745, exp(-Da) underflows and the result rounds to exactly 1.0. That is left
+ * alone rather than clamped to an invented value just below unity. The unconverted fraction at that
+ * point is smaller than any quantity the game or the physics can represent, and inventing a
+ * fictitious remainder would be a worse lie than rounding.
  */
 public final class ContinuousReactor {
 
@@ -58,8 +64,7 @@ public final class ContinuousReactor {
     public static double conversion(Reaction reaction, double kelvin, double residenceTimeSeconds) {
         OperatingPoint point = requirePoint(reaction);
         if (!(residenceTimeSeconds > 0.0d) || Double.isInfinite(residenceTimeSeconds)) {
-            throw new IllegalArgumentException(
-                "Residence time must be finite and positive: " + residenceTimeSeconds);
+            throw new IllegalArgumentException("Residence time must be finite and positive: " + residenceTimeSeconds);
         }
         if (!(point.residenceTimeSeconds > 0.0d)) {
             throw new IllegalArgumentException(
@@ -79,8 +84,7 @@ public final class ContinuousReactor {
     }
 
     /** Conversion for a vessel of the given volume and throughput. */
-    public static double conversion(Reaction reaction, double kelvin, double volumeLitres,
-        double flowLitresPerSecond) {
+    public static double conversion(Reaction reaction, double kelvin, double volumeLitres, double flowLitresPerSecond) {
         double residence = residenceTimeSeconds(volumeLitres, flowLitresPerSecond);
         return conversion(reaction, kelvin, residence);
     }
