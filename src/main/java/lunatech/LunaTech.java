@@ -7,8 +7,14 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import java.util.List;
+
 import gregtech.api.GregTechAPI;
+import gregtech.api.enums.Materials;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import lunatech.data.Datasets;
+import lunatech.data.Reaction;
+import lunatech.data.ReactionComponent;
 import lunatech.machines.MTEContinuousFlowReactor;
 
 /**
@@ -50,6 +56,36 @@ public class LunaTech {
             "lunatech.reactor.continuous",
             "Continuous Flow Reactor");
         LOG.info("Registered Continuous Flow Reactor at metatile id {}.", Integer.valueOf(id));
+        validateReactionMaterials();
+    }
+
+    /**
+     * Fails at startup if any reaction names a GregTech material that does not exist.
+     * <p>
+     * This is the loud failure the design intends, and it needs stating explicitly because
+     * {@code Materials.get} does not provide it: the method is annotated non-null and returns the
+     * {@code _NULL} sentinel for an unknown name. A null check alone can never fire, so a typo
+     * would otherwise leave the reactor forming correctly and silently never starting -- among the
+     * worst failure modes available, because everything looks right.
+     */
+    private static void validateReactionMaterials() {
+        for (Reaction reaction : Datasets.reactions().reactions) {
+            checkComponents(reaction, reaction.reactants);
+            checkComponents(reaction, reaction.products);
+        }
+    }
+
+    private static void checkComponents(Reaction reaction, List<ReactionComponent> components) {
+        for (ReactionComponent component : components) {
+            Materials material = Materials.get(component.material);
+            if (material == null || material == Materials._NULL) {
+                throw new IllegalStateException(
+                    "Reaction " + reaction.id
+                        + " names GregTech material '"
+                        + component.material
+                        + "', which does not exist. This is a defect in LunaTech data, not a user error.");
+            }
+        }
     }
 
     /**

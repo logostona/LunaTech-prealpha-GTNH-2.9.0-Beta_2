@@ -1,5 +1,6 @@
 package lunatech.machines;
 
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.onElementPass;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.transpose;
 import static gregtech.api.enums.HatchElement.Energy;
 import static gregtech.api.enums.HatchElement.InputHatch;
@@ -38,9 +39,10 @@ import gregtech.api.util.MultiblockTooltipBuilder;
 import gregtech.common.misc.GTStructureChannels;
 import lunatech.data.Datasets;
 import lunatech.data.Reaction;
-import lunatech.data.ReactionComponent;
 import lunatech.kinetics.Arrhenius;
+import lunatech.kinetics.BatchAmount;
 import lunatech.kinetics.ContinuousReactor;
+import lunatech.kinetics.ReactionBatch;
 
 /**
  * The Continuous Flow Reactor: objective O4, milestone M2.
@@ -112,7 +114,8 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
                         .atLeast(InputHatch, OutputHatch, Maintenance, Energy)
                         .casingIndex(Casings.ChemicallyInertMachineCasing.textureId)
                         .hint(1)
-                        .buildAndChain(Casings.ChemicallyInertMachineCasing.asElement()))
+                        .buildAndChain(
+                            onElementPass(x -> ++x.mCasing, Casings.ChemicallyInertMachineCasing.asElement())))
                 .addElement(
                     'H',
                     GTStructureChannels.HEATING_COIL.use(
@@ -220,9 +223,8 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
      * Runs one batch. Conversion comes from the coil temperature and the reaction's residence time,
      * so a hotter reactor converts more of the same feed rather than running a different recipe.
      * <p>
-     * Unconverted feed is returned rather than destroyed. That is the point of modelling conversion
-     * at all: a reaction that does not go to completion leaves something behind, and hiding it would
-     * make the kinetics decorative.
+     * Nothing is consumed until every reactant has been confirmed available, so a partial feed
+     * cannot leave the reactor having eaten one input and not the other.
      */
     @Override
     public CheckRecipeResult checkProcessing() {
@@ -232,48 +234,32 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
         }
 
         Reaction reaction = Datasets.reaction(DEMONSTRATION_REACTION);
-        if (reaction.basis == null || reaction.referencePoint == null) {
+        if (reaction.referencePoint == null || reaction.basis == null) {
             return CheckRecipeResultRegistry.NO_RECIPE;
         }
 
         double kelvin = level.getHeat();
         double residence = reaction.referencePoint.residenceTimeSeconds;
         double conversion = ContinuousReactor.conversion(reaction, kelvin, residence);
-        double basis = reaction.basis.millibucketsPerMole;
 
-        // Everything the batch needs must be present before anything is consumed, so a partial feed
-        // cannot leave the reactor having eaten one reactant and not the other.
-        for (ReactionComponent component : reaction.reactants) {
-            FluidStack required = fluidFor(component, component.moles * basis);
-            if (required == null) {
-                return CheckRecipeResultRegistry.NO_RECIPE;
-            }
+        List<FluidStack> feed = resolve(ReactionBatch.feed(reaction));
+        List<FluidStack> products = resolve(ReactionBatch.outputs(reaction, conversion));
+        if (feed == null || products == null || feed.isEmpty()) {
+            // A material name that does not resolve is a defect in our own data, not a player
+            // error, and validateReactionMaterials in LunaTech should already have refused to load.
+            return CheckRecipeResultRegistry.NO_RECIPE;
+        }
+
+        for (FluidStack required : feed) {
             if (!depleteInput(required, true)) {
                 return CheckRecipeResultRegistry.NO_RECIPE;
             }
         }
-
-        List<FluidStack> outputs = new ArrayList<FluidStack>();
-        for (ReactionComponent component : reaction.products) {
-            int amount = (int) Math.floor(component.moles * basis * conversion);
-            FluidStack produced = fluidFor(component, amount);
-            if (produced != null && amount > 0) {
-                outputs.add(produced);
-            }
-        }
-        for (ReactionComponent component : reaction.reactants) {
-            int unreacted = (int) Math.floor(component.moles * basis * (1.0d - conversion));
-            FluidStack returned = fluidFor(component, unreacted);
-            if (returned != null && unreacted > 0) {
-                outputs.add(returned);
-            }
+        for (FluidStack required : feed) {
+            depleteInput(required);
         }
 
-        for (ReactionComponent component : reaction.reactants) {
-            depleteInput(fluidFor(component, component.moles * basis));
-        }
-
-        mOutputFluids = outputs.toArray(new FluidStack[outputs.size()]);
+        mOutputFluids = products.toArray(new FluidStack[products.size()]);
         mEfficiency = 10000 - (getIdealStatus() - getRepairStatus()) * 1000;
         mEfficiencyIncrease = 10000;
         mMaxProgresstime = (int) Math.max(1.0d, residence * 20.0d);
@@ -281,17 +267,35 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
         return CheckRecipeResultRegistry.SUCCESSFUL;
     }
 
-    /** Resolves a dataset component to a GregTech fluid, or null if the material is unknown. */
-    private static FluidStack fluidFor(ReactionComponent component, double millibuckets) {
-        Materials material = Materials.getRealMaterial(component.material);
-        if (material == null) {
+    /** @return the amounts as GregTech fluids, or null if any material fails to resolve. */
+    private static List<FluidStack> resolve(List<BatchAmount> amounts) {
+        List<FluidStack> stacks = new ArrayList<FluidStack>();
+        for (BatchAmount amount : amounts) {
+            FluidStack stack = fluidFor(amount);
+            if (stack == null) {
+                return null;
+            }
+            stacks.add(stack);
+        }
+        return stacks;
+    }
+
+    /**
+     * Resolves one amount to a GregTech fluid.
+     * <p>
+     * {@code Materials.get} is annotated non-null and falls back to {@code Materials._NULL} for an
+     * unknown name, so a null check alone would never fire and a typo would silently produce
+     * nothing. The sentinel has to be compared explicitly.
+     */
+    static FluidStack fluidFor(BatchAmount amount) {
+        Materials material = Materials.get(amount.material);
+        if (material == null || material == Materials._NULL) {
             return null;
         }
-        long amount = (long) Math.floor(millibuckets);
-        if (amount <= 0L) {
+        if (amount.millibuckets <= 0L) {
             return null;
         }
-        return component.isGas() ? material.getGas(amount) : material.getFluid(amount);
+        return amount.isGas() ? material.getGas(amount.millibuckets) : material.getFluid(amount.millibuckets);
     }
 
     @Override
