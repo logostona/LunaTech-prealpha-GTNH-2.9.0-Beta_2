@@ -62,20 +62,10 @@ class ArrheniusTest {
     @Test
     @DisplayName("Physically impossible inputs are rejected rather than silently producing a number")
     void rejectsNonsense() {
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Arrhenius.rateMultiplier(-1.0d, 1000.0d, 1200.0d));
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Arrhenius.rateMultiplier(EA, 0.0d, 1200.0d));
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Arrhenius.rateMultiplier(EA, 1000.0d, -5.0d));
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Arrhenius.rateMultiplier(Double.NaN, 1000.0d, 1200.0d));
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Arrhenius.durationSeconds(0.0d, EA, 1000.0d, 1200.0d));
+        assertThrows(IllegalArgumentException.class, () -> Arrhenius.rateMultiplier(-1.0d, 1000.0d, 1200.0d));
+        assertThrows(IllegalArgumentException.class, () -> Arrhenius.rateMultiplier(EA, 0.0d, 1200.0d));
+        assertThrows(IllegalArgumentException.class, () -> Arrhenius.rateMultiplier(EA, 1000.0d, -5.0d));
+        assertThrows(IllegalArgumentException.class, () -> Arrhenius.rateMultiplier(Double.NaN, 1000.0d, 1200.0d));
+        assertThrows(IllegalArgumentException.class, () -> Arrhenius.durationSeconds(0.0d, EA, 1000.0d, 1200.0d));
     }
 }

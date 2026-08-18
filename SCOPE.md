@@ -207,7 +207,13 @@ Note on JDKs: `java` on PATH is a Java 8 JRE, but PrismLauncher had already down
 - *Measurable now:* load-time delta, heap delta at post-init, and NEI page delta — all of which should be indistinguishable from zero for a mod that registers nothing. Establishing the method and confirming zero is worth doing before content exists, since it is the only time the answer is known in advance.
 - *Deferred to M2:* the tick-cost budget, which needs running multiblocks to measure.
 
-### M2 — Continuous-flow reactor (O4)
+### M2 — Continuous-flow reactor (O4) *(model done; shell remaining)*
+
+✅ **Process model built and tested.** `Arrhenius` and `ContinuousReactor` compute conversion from temperature and residence time, anchored on a per-reaction operating point, with a declared equilibrium ceiling. This is the part that makes a reactor more than a recipe with a timer, and it is pure logic, so it is fully covered by the harness without a running game.
+
+**Remaining: the in-game shell.** A GregTech multiblock is a substantial piece of Minecraft work in its own right — StructureLib definition, metatile class, GUI, recipe map registration, textures — and none of it can be verified by CI. It is deliberately separated from the physics rather than bundled with it.
+
+**Still unmodelled from the original description:** pressure, side products, catalyst degradation and thermal dissipation. The model is first-order, isothermal plug flow with no volume change, and DATA.md and the class javadoc both say so.
 One parameterized reactor. Residence time, T, p, equilibrium conversion, side products, catalyst degradation, thermal dissipation. Proves the hardest architectural claim on a small number of reactions.
 
 ### M3 — First chemistry vertical

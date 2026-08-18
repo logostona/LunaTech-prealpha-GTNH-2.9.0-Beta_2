@@ -10,12 +10,9 @@ package lunatech.kinetics;
  * 1000 K and at 10 000 K. A linear-threshold model can be tuned to agree at exactly one temperature
  * and is wrong everywhere else.
  * <p>
- * This class expresses the ratio form, which needs no pre-exponential factor:
- * <pre>
- *     r(T) = exp( -(Ea/R) * (1/T - 1/T_ref) )
- * </pre>
- * A is unknown for most reactions and cancels in the ratio, so a reaction needs only an activation
- * energy and the reference temperature its quoted duration belongs to.
+ * This class expresses the ratio form r(T) = exp(-(Ea / R) * (1 / T - 1 / T_ref)), which needs no
+ * pre-exponential factor. A is unknown for most reactions and cancels in the ratio, so a reaction
+ * needs only an activation energy and the reference temperature its quoted duration belongs to.
  */
 public final class Arrhenius {
 

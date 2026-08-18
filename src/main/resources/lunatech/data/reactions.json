@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "2026-08-18",
+  "reactions": [
+    {
+      "id": "water_gas_shift",
+      "equation": "CO + H2O -> CO2 + H2",
+      "activationEnergy": {
+        "value": 80000.0,
+        "unit": "J/mol",
+        "source": "Representative range for Fe-Cr high-temperature shift catalysts, 70-95 kJ/mol. Provisional: pending a single-source citation.",
+        "method": "estimated:literature-range",
+        "uncertainty": 20000.0
+      },
+      "referenceTemperature": {
+        "value": 673.0,
+        "unit": "K",
+        "source": "Representative high-temperature shift operating point, 620-770 K. Provisional.",
+        "method": "estimated:literature-range",
+        "uncertainty": 50.0
+      },
+      "referencePoint": {
+        "residenceTimeSeconds": 60.0,
+        "conversion": 0.8,
+        "rationale": "Chosen so one reference operation is a minute at 80 percent conversion, which sets a legible in-game pace. A design choice, not a measurement."
+      },
+      "maximumConversion": 0.95
+    },
+    {
+      "id": "steam_methane_reforming",
+      "equation": "CH4 + H2O -> CO + 3 H2",
+      "activationEnergy": {
+        "value": 220000.0,
+        "unit": "J/mol",
+        "source": "Representative range for Ni-supported reforming catalysts, 200-250 kJ/mol. Provisional: pending a single-source citation.",
+        "method": "estimated:literature-range",
+        "uncertainty": 30000.0
+      },
+      "referenceTemperature": {
+        "value": 1123.0,
+        "unit": "K",
+        "source": "Representative reformer outlet temperature, 1073-1173 K. Provisional.",
+        "method": "estimated:literature-range",
+        "uncertainty": 50.0
+      },
+      "referencePoint": {
+        "residenceTimeSeconds": 30.0,
+        "conversion": 0.7,
+        "rationale": "Half the shift reaction's residence time at lower conversion, so the steeper activation energy is visible as a sharper temperature response in play. A design choice, not a measurement."
+      }
+    }
+  ]
+}

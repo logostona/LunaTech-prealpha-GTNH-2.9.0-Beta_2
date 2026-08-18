@@ -34,8 +34,8 @@ class BudgetTest {
     @Test
     @DisplayName("A ceiling is never tighter than the agreement budget it backstops")
     void ceilingIsTheLooserOfTheTwo() {
-        String[] fields = { "molarMass", "density", "meltingPoint", "boilingPoint", "specificHeat",
-            "enthalpyOfFusion", "enthalpyOfVaporisation", "activationEnergy", "referenceTemperature" };
+        String[] fields = { "molarMass", "density", "meltingPoint", "boilingPoint", "specificHeat", "enthalpyOfFusion",
+            "enthalpyOfVaporisation", "activationEnergy", "referenceTemperature" };
         for (String field : fields) {
             Budgets.Budget budget = Budgets.forField(field);
             assertNotNull(budget, field);

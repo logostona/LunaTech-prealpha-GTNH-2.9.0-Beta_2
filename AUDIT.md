@@ -76,7 +76,13 @@ So A1's coordinated change has four parts: real service temperatures at the low 
 
 **Violation:** this is wrong in *form*, not merely in magnitude. Reaction rates follow Arrhenius behaviour, k ∝ exp(−Eₐ/RT), so a fixed temperature excess cannot produce a fixed rate multiplier — the same ΔT of 1800 K yields wildly different acceleration at 1000 K than at 10 000 K. A linear-threshold model can be tuned to match at exactly one temperature and is wrong everywhere else.
 
-**Disposition: correct.** Replace with an Arrhenius rate model parameterized by per-reaction activation energy. This is directly downstream of the "reaction kinetics" commitment in PHILOSOPHY §3 Pillar I, and it is the natural bridge from M0 into M2's continuous-flow reactor, where rate laws are the core mechanic.
+**Disposition: correct. Model built; reach over stock content is gated.**
+
+`lunatech.kinetics.Arrhenius` implements the ratio form r(T) = exp(-(Ea / R) * (1 / T - 1 / T_ref)), which needs no pre-exponential factor: A is unknown for most reactions and cancels. `ContinuousReactor` turns that into conversion through a first-order plug-flow model, and LunaTech's own processes use it now.
+
+**It is deliberately not applied to stock GregTech recipes.** Doing so needs an activation energy for every EBF recipe, and inventing several hundred of them would breach objective O5 far more seriously than the linear model breaches physics. The correction therefore reaches LunaTech content immediately and stock content only as real citations arrive, reaction by reaction.
+
+**The cap is part of the physics, not a fudge.** Unbounded exponential speed-up is both a numerical hazard and wrong: past some rate a process is limited by heat transfer, mass transfer or equilibrium rather than by chemistry. The ceiling is 64x, chosen as 4^3 so it lands on GregTech's own progression grid at exactly three heat overclocks.
 
 ## A6 — Gas fuel values track real chemistry to ±20 %; liquid fuel values are meaningless because GregTech has no density
 

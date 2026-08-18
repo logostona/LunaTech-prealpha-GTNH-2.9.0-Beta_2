@@ -69,7 +69,30 @@ Expected units, asserted by the harness:
 | `specificHeat` | `J/(kg*K)` |
 | `enthalpyOfFusion`, `enthalpyOfVaporisation` | `J/kg` |
 
-## 5. Known limitation
+## 5. Reaction records
+
+```json
+{
+  "id": "water_gas_shift",
+  "equation": "CO + H2O -> CO2 + H2",
+  "activationEnergy":     { "value": 80000.0, "unit": "J/mol", ... },
+  "referenceTemperature": { "value": 673.0,   "unit": "K",     ... },
+  "referencePoint": { "residenceTimeSeconds": 60.0, "conversion": 0.8, "rationale": "..." },
+  "maximumConversion": 0.95
+}
+```
+
+⚖️ **Two kinds of number that look alike and are not.** `activationEnergy` and `referenceTemperature` are physical, so they are `Quantity` objects carrying provenance and held to the budgets in [SCOPE.md §3.1](SCOPE.md#31-error-budgets-⚖%EF%B8%8F-ratified-d3). `referencePoint` is LunaTech's chosen anchor — a design decision, not a measurement — so it is deliberately **not** a `Quantity`. Giving it a source and an uncertainty would let an invented number wear a citation. It carries a `rationale` instead, so the choice stays answerable.
+
+The pair fixes the Damköhler number without any absolute rate constant: a reaction reaching conversion X in time τ has kτ = −ln(1 − X) there, and every other condition follows by ratio.
+
+`maximumConversion` is an optional declared ceiling standing in for a real equilibrium calculation. A kinetic model alone drives an equilibrium-limited reaction to completion given enough time, which is wrong. Until ΔrG(T) is in the dataset this cap is declared rather than computed.
+
+**The seeded values are provisional.** Both reactions carry `estimated:literature-range` activation energies with wide uncertainties, because published values for one reaction differ by 20–30 kJ/mol with catalyst, support and temperature window. They are honest placeholders that satisfy the ratified ceiling, not citations.
+
+Reaction datasets carry no `gt5uVersion`: activation energies are chemistry, not values read out of GregTech, so a GregTech bump does not invalidate them.
+
+## 6. Known limitation
 
 `specificHeat` is currently a single value at 298 K, used as if constant across the whole heating range. For iron heated to melting this is a first-order approximation that ignores both the rise in Cp with temperature and the α→γ→δ phase transitions. It is good enough for the pacing argument in [UNITS.md §4](UNITS.md#4-the-matter-basis) and not good enough for O2's energy-balance claims.
 
