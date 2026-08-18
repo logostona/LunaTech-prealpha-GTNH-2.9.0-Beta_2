@@ -47,8 +47,12 @@ public final class Shomate {
     public static double enthalpyFromReferenceMolar(HeatCapacity capacity, double kelvin) {
         ShomateRange range = require(capacity, kelvin);
         double t = kelvin / 1000.0d;
-        double kilojoules = range.a * t + range.b * t * t / 2.0d + range.c * t * t * t / 3.0d
-            + range.d * t * t * t * t / 4.0d - range.e / t + range.f - range.h;
+        double kilojoules = range.a * t + range.b * t * t / 2.0d
+            + range.c * t * t * t / 3.0d
+            + range.d * t * t * t * t / 4.0d
+            - range.e / t
+            + range.f
+            - range.h;
         return kilojoules * 1000.0d;
     }
 
@@ -78,8 +82,12 @@ public final class Shomate {
         ShomateRange range = capacity.rangeFor(kelvin);
         if (range == null) {
             throw new IllegalArgumentException(
-                "No Shomate range covers " + kelvin + " K; data spans " + capacity.minKelvin() + " to "
-                    + capacity.maxKelvin() + " K and extrapolation is refused");
+                "No Shomate range covers " + kelvin
+                    + " K; data spans "
+                    + capacity.minKelvin()
+                    + " to "
+                    + capacity.maxKelvin()
+                    + " K and extrapolation is refused");
         }
         return range;
     }

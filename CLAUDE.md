@@ -53,6 +53,8 @@ Import order is `java, javax, net, org, com`, with unmatched packages (`cpw`, `l
 
 **Line endings: LF only.** Spotless rejects CRLF, but `.gitattributes` normalises to LF on commit. So a file written with CRLF **passes CI** (which checks out LF) and **fails the local build**, while `git diff` shows nothing because the committed content is already correct. Windows tooling writing in text mode introduces this silently. Normalise the working copy to LF before building; a byte-identical `git diff` alongside a Spotless failure is the signature.
 
+Once a `+` or arithmetic chain has to wrap at all, Eclipse puts **every operand on its own line** rather than packing them. Do not hand-pack a wrapped concatenation; either keep it on one line or expect one operand per line.
+
 The Eclipse 4.19 profile **wraps any chain of two or more method calls onto separate lines**, regardless of line length. `Datasets.materials().require("iron")` becomes two lines. Prefer writing a single-call accessor or a local variable over accepting the wrap — `Datasets.material("iron")` and `String t = s.trim(); t.isEmpty()` both read better than what the formatter produces.
 
 ## Build

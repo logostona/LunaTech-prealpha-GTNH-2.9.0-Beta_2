@@ -48,7 +48,8 @@ class ShomateTest {
         double constantCp = 449.0d * (55.845d / 1000.0d) * (1809.0d - 298.15d);
         assertTrue(
             joules > constantCp * 1.4d,
-            "integrated duty should exceed the constant-Cp estimate by ~55 percent, got " + joules + " vs "
+            "integrated duty should exceed the constant-Cp estimate by ~55 percent, got " + joules
+                + " vs "
                 + constantCp);
     }
 
