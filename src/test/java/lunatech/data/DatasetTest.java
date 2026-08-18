@@ -17,6 +17,11 @@ import org.junit.jupiter.api.Test;
  * These are structural gates rather than physics checks: they exist so that an unsourced constant,
  * a wrong unit, or data verified against a different GregTech build fails the build instead of
  * quietly producing a plausible number.
+ * <p>
+ * They also enforce the admissibility half of the ratified error budgets (SCOPE.md section 3.1): an
+ * estimated value must declare an uncertainty, and that uncertainty must sit under the ceiling for
+ * its quantity. Without the ceiling, judging an estimate against "its own method's uncertainty" is
+ * circular and every estimate passes.
  */
 class DatasetTest {
 
@@ -83,8 +88,24 @@ class DatasetTest {
         assertTrue(
             q.isExperimental() || q.method.startsWith("estimated:"),
             where + " has an unrecognised method: " + q.method);
-        if (!q.isExperimental()) {
+        Budgets.Budget budget = Budgets.forField(field);
+        assertNotNull(budget, "no ratified budget for " + field + "; see SCOPE.md section 3.1");
+
+        if (q.isExperimental()) {
+            // An experimental value need not state an uncertainty, but if it does, one larger than
+            // the agreement budget means the value cannot satisfy that budget even in principle.
+            if (q.uncertainty != null) {
+                double limit = budget.agreementLimit(q.value);
+                assertTrue(
+                    q.uncertainty.doubleValue() <= limit,
+                    where + " states uncertainty " + q.uncertainty + " beyond its agreement budget " + limit);
+            }
+        } else {
             assertNotNull(q.uncertainty, where + " is estimated but states no uncertainty");
+            double limit = budget.ceilingLimit(q.value);
+            assertTrue(
+                q.uncertainty.doubleValue() <= limit,
+                where + " is estimated with uncertainty " + q.uncertainty + " above the ceiling " + limit);
         }
     }
 }

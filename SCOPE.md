@@ -51,24 +51,59 @@ Numbered for reference. Each is stated so that it can be judged done or not done
 
 ⚖️ **Reliability is defined as numeric tolerances enforced by an automated validation harness.** A dataset entry or recipe definition that violates its budget fails the build. Provenance (O5) is required alongside, but tolerances are the gate.
 
-### 3.1 Draft error budgets ❓ (numbers to ratify — §9 D3)
+### 3.1 Error budgets ⚖️ ratified (D3)
 
-| Quantity | Budget | Reference class |
-|---|---|---|
-| Element balance | **exact** (integer equality) | derived |
-| Charge balance | **exact** | derived |
-| Mass balance closure | ≤ 1×10⁻⁹ relative | derived |
-| ΔfH° (298.15 K) | ± 5 kJ/mol | NIST / DIPPR / literature |
-| ΔrG°, equilibrium constants | ± 10 kJ/mol | derived from ΔfH°, S° |
-| Cp(T) over stated range | ± 3 % | correlation fit |
-| ΔvapH, ΔfusH | ± 3 % | experimental |
-| Normal boiling / melting point | ± 2 K | experimental |
-| Liquid density | ± 2 % | experimental |
-| Isotope mass | ± 1×10⁻⁶ u | AME evaluation |
-| Half-life | ± 0.1 % | NUBASE / ENSDF |
-| Recipe energy vs thermodynamic minimum | **EU_supplied ≥ duty**, hard inequality | derived |
+**What a budget compares.** The draft left this implicit and it is the whole difficulty, because a
+number LunaTech records *is* taken from the reference, so it cannot disagree with it. A budget
+therefore binds one of three things:
 
-**Estimated values are permitted** where no experimental data exists, but must be tagged with the method and its published uncertainty, and the budget applied is the method's uncertainty — not the experimental budget above. A value with no source and no method is a build failure.
+1. **Agreement** — where a value is cross-checked against a second independent source, or derived
+   two ways (e.g. an enthalpy of fusion quoted per mole and per kilogram), the two must agree within
+   the agreement budget.
+2. **Admissibility** — an estimated value states its method's uncertainty. That uncertainty must not
+   exceed the ceiling, or the value is too poor to ship.
+3. **Invariants** — balances and inequalities that must hold identically, with no reference at all.
+
+**The correction to the draft:** it said estimated values are judged by "the method's uncertainty,
+not the experimental budget". That is unenforceable — a value inherits whatever uncertainty its
+method claims, so any estimate passes. Every quantity now carries a **ceiling** as well, and that
+ceiling is what makes estimation admissible rather than unlimited.
+
+| Quantity | Agreement | Max admissible uncertainty | Reference class |
+|---|---|---|---|
+| Element balance | **exact** (integer equality) | — | derived |
+| Charge balance | **exact** | — | derived |
+| Mass balance closure | ≤ 1×10⁻⁹ relative | — | derived |
+| Molar mass | ± 1×10⁻³ g/mol | ± 1×10⁻² g/mol | IUPAC atomic weights |
+| ΔfH° (298.15 K) | ± 5 kJ/mol | ± 15 kJ/mol | NIST / DIPPR / literature |
+| ΔrG°, equilibrium constants | ± 10 kJ/mol | ± 25 kJ/mol | derived from ΔfH°, S° |
+| Cp over stated range | ± 3 % | ± 10 % | correlation fit |
+| ΔvapH, ΔfusH | ± 3 % | ± 10 % | experimental |
+| Normal boiling / melting point | ± 2 K | ± 10 K | experimental |
+| Liquid density | ± 2 % | ± 5 % | experimental |
+| Activation energy | ± 20 kJ/mol | ± 40 kJ/mol | kinetics literature |
+| Isotope mass | ± 1×10⁻⁶ u **or the reference's own stated uncertainty, whichever is larger** | same | AME evaluation |
+| Half-life | ± 0.1 % **or the reference's own stated uncertainty, whichever is larger** | same | NUBASE / ENSDF |
+| Recipe energy vs thermodynamic minimum | **EU_supplied ≥ duty**, hard inequality | — | derived |
+
+**Why the nuclear rows changed.** Flat budgets of ± 0.1 % and ± 1×10⁻⁶ u are attainable for
+well-measured nuclides and impossible for exotic ones, whose reference values are themselves
+uncertain by tens of percent. A budget tighter than the reference demands precision that does not
+exist, so it is expressed relative to the reference's own uncertainty.
+
+**Activation energy is deliberately loose.** Published values for the same reaction routinely differ
+by 20–30 kJ/mol depending on catalyst, support and temperature window. A tight budget here would be
+false precision, and the honest response is a wide budget with the uncertainty stated.
+
+❌ **Known schema gap.** Density and Cp are strongly temperature-dependent, but `Quantity` has no
+temperature field — the conditions live in the `source` string, where no test can read them. Two
+values at different temperatures could satisfy every budget and still be inconsistent. Fixing this
+needs a schema change, tracked alongside the Cp(T) work in [DATA.md](DATA.md) §5.
+
+**Enforcement status.** Admissibility (rule 2) is enforced now by `DatasetTest` for every shipped
+quantity. Agreement (rule 1) and the invariants (rule 3) become enforceable when the data they
+compare exists — there are no dual-sourced values, no stoichiometry and no recipes yet. A budget
+that nothing checks is a comment, and this section says plainly which ones those currently are.
 
 ### 3.2 Harness
 
@@ -189,7 +224,7 @@ Inorganic/materials, nuclear, automation. Sequenced after M2's architecture is p
 |---|---|---|---|
 | ~~D1~~ | ~~Build toolchain and Java target~~ **Resolved:** GTNH convention plugins, Gradle 9.4.0 on JDK 17+, JVM Downgrader to Java 8 bytecode (M1) | Blocks M1 entirely | closed |
 | ~~D2~~ | ~~Adopt UniMixins from M1 or defer~~ **Resolved:** deferred; `usesMixins = false` until a behavioural change needs it (M1) | Defines how invasive v1 can be | closed |
-| D3 | Ratify the §3.1 error budgets | They are the reliability contract; drafted, not agreed | — |
+| ~~D3~~ | ~~Ratify the §3.1 error budgets~~ **Resolved.** Ratified with a correction: every quantity now carries a ceiling on declared uncertainty, because judging an estimate against its own method's uncertainty is circular. Enforced by `DatasetTest` and pinned by `BudgetTest` | They are the reliability contract | closed |
 | ~~D4~~ | ~~Dataset format and versioning~~ **Resolved: JSON.** Schema, provenance and versioning rules in [DATA.md](DATA.md). Curated in this repo until a generation pipeline exists, then a sibling repo emits the same schema | Affects harness design and review ergonomics | closed |
 | ~~D5~~ | ~~Does "harder than stock" count as invalidating a progression milestone?~~ **Resolved:** harder is permitted, earlier and cheaper are not (§6) | Governs every replacement decision | closed |
 | D6 | Is OpenComputers integration in v1 or deferred? | §4 currently claims it without a phase | — |

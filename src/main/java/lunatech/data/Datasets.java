@@ -25,9 +25,13 @@ public final class Datasets {
 
     private static final String MATERIALS_PATH = "/lunatech/data/materials.json";
 
+    private static final String REACTIONS_PATH = "/lunatech/data/reactions.json";
+
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private static MaterialDataset materials;
+
+    private static ReactionDataset reactions;
 
     /** Loads and caches the materials dataset. */
     public static synchronized MaterialDataset materials() {
@@ -41,6 +45,26 @@ public final class Datasets {
     /** Convenience accessor for a single material. Throws if the id is absent. */
     public static Material material(String id) {
         MaterialDataset dataset = materials();
+        return dataset.require(id);
+    }
+
+    /** Loads and caches the reactions dataset. */
+    public static synchronized ReactionDataset reactions() {
+        if (reactions == null) {
+            reactions = load(REACTIONS_PATH, ReactionDataset.class);
+            if (reactions.schemaVersion != SUPPORTED_SCHEMA_VERSION) {
+                throw new IllegalStateException(
+                    "Reaction dataset schemaVersion " + reactions.schemaVersion
+                        + " but this build understands "
+                        + SUPPORTED_SCHEMA_VERSION);
+            }
+        }
+        return reactions;
+    }
+
+    /** Convenience accessor for a single reaction. Throws if the id is absent. */
+    public static Reaction reaction(String id) {
+        ReactionDataset dataset = reactions();
         return dataset.require(id);
     }
 
