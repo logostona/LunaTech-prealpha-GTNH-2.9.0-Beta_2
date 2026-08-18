@@ -95,10 +95,15 @@ exist, so it is expressed relative to the reference's own uncertainty.
 by 20–30 kJ/mol depending on catalyst, support and temperature window. A tight budget here would be
 false precision, and the honest response is a wide budget with the uncertainty stated.
 
-❌ **Known schema gap.** Density and Cp are strongly temperature-dependent, but `Quantity` has no
-temperature field — the conditions live in the `source` string, where no test can read them. Two
-values at different temperatures could satisfy every budget and still be inconsistent. Fixing this
-needs a schema change, tracked alongside the Cp(T) work in [DATA.md](DATA.md) §5.
+✅ **Schema gap closed.** `Quantity` now carries an optional `temperatureKelvin`, so a
+state-dependent value states its conditions where a test can read them rather than only in prose.
+Cp is additionally available as a temperature-dependent Shomate correlation ([DATA.md](DATA.md) §6).
+Pressure remains unrepresented, which still makes gas density ill-defined.
+
+✅ **The agreement rule now has something to check.** Iron carries both a single-point Cp from CRC
+and a Shomate correlation from NIST — two independent sources — and `DatasetTest` asserts they agree
+within the ±3 % budget above. They land 0.1 % apart. This was the first rule-1 comparison available
+anywhere in the project.
 
 **Enforcement status.** Admissibility (rule 2) is enforced now by `DatasetTest` for every shipped
 quantity. Agreement (rule 1) and the invariants (rule 3) become enforceable when the data they

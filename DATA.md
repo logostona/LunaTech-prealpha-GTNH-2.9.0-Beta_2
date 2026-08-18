@@ -92,8 +92,34 @@ The pair fixes the Damköhler number without any absolute rate constant: a react
 
 Reaction datasets carry no `gt5uVersion`: activation energies are chemistry, not values read out of GregTech, so a GregTech bump does not invalidate them.
 
-## 6. Known limitation
+## 6. Temperature-dependent heat capacity ✅ resolved
 
-`specificHeat` is currently a single value at 298 K, used as if constant across the whole heating range. For iron heated to melting this is a first-order approximation that ignores both the rise in Cp with temperature and the α→γ→δ phase transitions. It is good enough for the pacing argument in [UNITS.md §4](UNITS.md#4-the-matter-basis) and not good enough for O2's energy-balance claims.
+`heatCapacity` holds Shomate coefficient sets in the molar form NIST publishes, each with the temperature range it is valid over:
 
-Replacing it with a Cp(T) correlation is required before the reactor work in M2, and is the first planned schema change.
+```json
+"heatCapacity": {
+  "source": "NIST Chemistry WebBook, Shomate coefficients for the alpha-delta phase of iron",
+  "method": "experimental",
+  "ranges": [ { "minKelvin": 298.0, "maxKelvin": 700.0, "a": 18.42868, "b": 24.64301, ... } ]
+}
+```
+
+⚖️ **The range is data, not a footnote.** Shomate coefficients are wildly wrong outside their band — iron's 1100–1809 K set evaluated at 298 K returns about 87 times the true heat capacity. `lunatech.thermo.Shomate` therefore refuses to extrapolate rather than approximating, and the harness requires ranges to be ordered and contiguous: a gap makes some temperatures unevaluable, an overlap makes the answer depend on iteration order.
+
+⚖️ **Stored molar, converted on read.** NIST publishes molar values; converting to a mass basis by hand at data-entry time is where transcription errors hide.
+
+**Duty is integrated, not multiplied.** The Shomate form was chosen because its integral is analytic, so heating enthalpy is exact rather than Cp × ΔT. That distinction is worth 40 % on the one number the matter basis rests on — see [UNITS.md §4](UNITS.md#4-the-matter-basis).
+
+**The single-point `specificHeat` is retained deliberately**, not superseded. It comes from a different source (CRC) than the correlation (NIST), so the two cross-check: `DatasetTest` asserts they agree within the ratified ±3 % agreement budget. They land 0.1 % apart. This is the first thing in the project to exercise the *agreement* rule of [SCOPE.md §3.1](SCOPE.md#31-error-budgets-⚖%EF%B8%8F-ratified-d3), which until now had nothing to check.
+
+`heatCapacity` is optional. A material no duty calculation touches need not carry one, and inventing coefficients to fill the schema would be worse than leaving it absent.
+
+## 7. Conditions on state-dependent values ✅ resolved
+
+`Quantity` carries an optional `temperatureKelvin`. Density and single-point heat capacities are strongly temperature-dependent, and their conditions previously lived only in the `source` string where no test could read them — so two values at different temperatures could satisfy every budget and still be inconsistent. This closes the gap recorded in SCOPE.md §3.1.
+
+## 8. Remaining limitations
+
+- **Pressure is not represented.** Density of a gas is meaningless without it, and no `pressurePascals` field exists yet.
+- **Iron's correlation stops at 1809 K** against a melting point of 1811 K. The 2 K gap sits inside the ratified ±2 K agreement budget and contributes about 0.1 % of the melt duty, so it is accepted rather than papered over.
+- **Liquid and gas phases have no correlations yet.** Only solid iron carries Cp(T); everything above melting is still unmodelled.

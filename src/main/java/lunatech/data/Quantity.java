@@ -27,6 +27,16 @@ public final class Quantity {
     /** Absolute uncertainty in {@link #unit}. Required when {@link #method} is not experimental. */
     public Double uncertainty;
 
+    /**
+     * Temperature the value was measured at, K. Optional, but expected for any state-dependent
+     * property such as density or a single-point heat capacity.
+     * <p>
+     * Closes the gap SCOPE.md section 3.1 recorded: conditions previously lived in the {@code
+     * source} string, where no test could read them, so two values at different temperatures could
+     * satisfy every budget and still be inconsistent.
+     */
+    public Double temperatureKelvin;
+
     public boolean isExperimental() {
         return "experimental".equals(method);
     }

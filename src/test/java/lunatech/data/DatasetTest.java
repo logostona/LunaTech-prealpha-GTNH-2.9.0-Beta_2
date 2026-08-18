@@ -11,6 +11,8 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import lunatech.thermo.Shomate;
+
 /**
  * The dataset half of the validation harness required by SCOPE.md section 3.
  * <p>
@@ -71,6 +73,60 @@ class DatasetTest {
     void massFollowsFromTheMatterBasis() {
         Material iron = Datasets.material("iron");
         assertEquals(1.134d, iron.massKilograms(144L), 1.0e-3d);
+    }
+
+    @Test
+    @DisplayName("Shomate ranges are ordered, contiguous and sourced")
+    void heatCapacityRangesAreWellFormed() {
+        for (Material m : Datasets.materials().materials) {
+            HeatCapacity capacity = m.heatCapacity;
+            if (capacity == null) {
+                continue;
+            }
+            assertNotNull(capacity.source, m.id + " heat capacity has no source");
+            String trimmed = capacity.source.trim();
+            assertFalse(trimmed.isEmpty(), m.id + " heat capacity has a blank source");
+            assertNotNull(capacity.method, m.id + " heat capacity has no method");
+            assertFalse(capacity.ranges.isEmpty(), m.id + " declares heat capacity with no ranges");
+
+            double previousMax = Double.NaN;
+            for (ShomateRange range : capacity.ranges) {
+                assertTrue(
+                    range.maxKelvin > range.minKelvin,
+                    m.id + " has a range that does not ascend: " + range.minKelvin + " to " + range.maxKelvin);
+                if (!Double.isNaN(previousMax)) {
+                    // A gap would make some temperatures unevaluable; an overlap would make the
+                    // answer depend on iteration order. Both are defects.
+                    assertEquals(
+                        previousMax,
+                        range.minKelvin,
+                        1.0e-9d,
+                        m.id + " has a gap or overlap at " + range.minKelvin + " K");
+                }
+                previousMax = range.maxKelvin;
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Cp(T) agrees with the independent single-point value, exercising the agreement budget")
+    void correlationAgreesWithSinglePoint() {
+        for (Material m : Datasets.materials().materials) {
+            if (m.heatCapacity == null || m.specificHeat == null) {
+                continue;
+            }
+            Double at = m.specificHeat.temperatureKelvin;
+            assertNotNull(at, m.id + " has a single-point Cp with no stated temperature");
+
+            double fromCorrelation = Shomate.heatCapacityMass(m.heatCapacity, m.molarMass.value, at.doubleValue());
+            Budgets.Budget budget = Budgets.forField("specificHeat");
+            double limit = budget.agreementLimit(m.specificHeat.value);
+            assertEquals(
+                m.specificHeat.value,
+                fromCorrelation,
+                limit,
+                m.id + " single-point Cp and Cp(T) disagree beyond the ratified agreement budget");
+        }
     }
 
     private static void check(String id, String field, Quantity q, String expectedUnit, boolean required) {

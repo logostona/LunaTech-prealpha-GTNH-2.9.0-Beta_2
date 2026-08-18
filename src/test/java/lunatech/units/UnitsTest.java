@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import lunatech.data.Datasets;
 import lunatech.data.Material;
+import lunatech.thermo.Shomate;
 
 /**
  * First member of the validation harness described in SCOPE.md section 3.
@@ -60,21 +61,25 @@ class UnitsTest {
     }
 
     @Test
-    @DisplayName("An iron ingot melt is about 1.05 MJ, derived from the dataset not hardcoded")
+    @DisplayName("An iron ingot melt is about 1.47 MJ, integrated over Cp(T) rather than approximated")
     void ironIngotMeltDuty() {
         Material iron = Datasets.material("iron");
 
         double massKg = iron.massKilograms(Units.MILLIBUCKETS_PER_INGOT);
-        double deltaT = iron.meltingPoint.value - 298.15d;
-        double dutyJoules = massKg * (iron.specificHeat.value * deltaT + iron.enthalpyOfFusion.value);
 
-        // Roughly 1.05 MJ. At HV (10.24 kW) that is about 103 s, the same order as stock GTNH
-        // blast furnace timings -- the agreement that settled the matter basis.
+        // Iron's Shomate data stops at 1809 K against a melting point of 1811 K. The 2 K gap sits
+        // inside the +/- 2 K agreement budget ratified for melting points, and contributes about
+        // 0.1 percent of the duty.
+        double sensible = Shomate.enthalpyChangeMass(iron.heatCapacity, iron.molarMass.value, 298.15d, 1809.0d);
+        double dutyJoules = massKg * (sensible + iron.enthalpyOfFusion.value);
+
         assertEquals(1.134d, massKg, 1.0e-3d);
-        assertEquals(1.05e6d, dutyJoules, 2.0e4d);
-        assertEquals(103.0d, Units.euDemand(dutyJoules) / Units.watts(512L), 2.0d);
+        assertEquals(1.471e6d, dutyJoules, 5.0e3d);
 
-        // Constant Cp over 1500 K is a first-order approximation; see DATA.md section 5.
-        assertTrue(iron.specificHeat.isExperimental(), "the pacing argument rests on measured Cp");
+        // About 144 s at HV. The constant-Cp approximation this replaces gave 103 s, understating
+        // the duty by 40 percent -- still the same order as stock blast furnace timings, so the
+        // matter basis survives, but the number it rests on has moved.
+        assertEquals(144.0d, Units.euDemand(dutyJoules) / Units.watts(512L), 2.0d);
+        assertTrue(iron.heatCapacity.isExperimental(), "the pacing argument rests on measured Cp(T)");
     }
 }

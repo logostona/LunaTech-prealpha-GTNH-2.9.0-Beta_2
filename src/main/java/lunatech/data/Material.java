@@ -18,7 +18,14 @@ public final class Material {
     public Quantity density;
     public Quantity meltingPoint;
     public Quantity boilingPoint;
+    /** Single-point heat capacity. Retained alongside {@link #heatCapacity} as an independent check. */
     public Quantity specificHeat;
+
+    /**
+     * Temperature-dependent heat capacity as Shomate ranges. Optional: materials that no duty
+     * calculation touches need not carry one.
+     */
+    public HeatCapacity heatCapacity;
     public Quantity enthalpyOfFusion;
     public Quantity enthalpyOfVaporisation;
 
