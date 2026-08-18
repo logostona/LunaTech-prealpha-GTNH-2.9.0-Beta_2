@@ -16,6 +16,7 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnewhorizon.structurelib.alignment.constructable.ISurvivalConstructable;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -24,16 +25,20 @@ import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import gregtech.api.casing.Casings;
 import gregtech.api.enums.HeatingCoilLevel;
+import gregtech.api.enums.Materials;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBase;
+import gregtech.api.recipe.check.CheckRecipeResult;
+import gregtech.api.recipe.check.CheckRecipeResultRegistry;
 import gregtech.api.render.TextureFactory;
 import gregtech.api.structure.error.StructureError;
 import gregtech.api.util.MultiblockTooltipBuilder;
 import gregtech.common.misc.GTStructureChannels;
 import lunatech.data.Datasets;
 import lunatech.data.Reaction;
+import lunatech.data.ReactionComponent;
 import lunatech.kinetics.Arrhenius;
 import lunatech.kinetics.ContinuousReactor;
 
@@ -44,17 +49,27 @@ import lunatech.kinetics.ContinuousReactor;
  * that plus a residence time into conversion. Output therefore depends on how the machine is
  * operated rather than on a fixed recipe duration.
  * <p>
- * <b>This stage forms and reports; it does not yet process.</b> The GregTech processing pipeline is
- * built around a recipe map and a rate-driven reactor is not, so custom processing is deliberately
- * left to a later stage rather than bolted onto a mechanism that does not fit it. What is wired now
- * is the physics readout: the info panel shows the temperature the coils give, the Arrhenius rate
- * multiplier at that temperature, and the conversion it implies.
+ * Processing overrides {@code checkProcessing} rather than supplying a recipe map, because a
+ * rate-driven reactor has no recipes: one feed and one temperature give a continuum of outcomes.
+ * Each batch consumes its reactants whole, produces the converted fraction, and returns the
+ * unconverted remainder.
  */
 public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTEContinuousFlowReactor>
     implements ISurvivalConstructable {
 
-    /** The reaction this stage reports on. Selecting one in world arrives with processing. */
+    /** The reaction this reactor runs. Selecting one in world is a later refinement. */
     private static final String DEMONSTRATION_REACTION = "water_gas_shift";
+
+    /**
+     * Declared machine power, EU/t.
+     * <p>
+     * This is <em>not</em> a thermodynamic minimum, and objective O2 cannot yet be checked against
+     * it. Doing so needs the reaction enthalpy and the heat capacity of every reactant, and the
+     * dataset carries neither -- only iron has Cp(T), and no reaction carries a heat of reaction.
+     * Until those exist this is an honest placeholder rather than a derived figure, and AUDIT.md
+     * and SCOPE.md both say so.
+     */
+    private static final int DECLARED_EU_PER_TICK = 480;
 
     private static IStructureDefinition<MTEContinuousFlowReactor> STRUCTURE_DEFINITION = null;
 
@@ -90,8 +105,7 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
                 .addShape(
                     mName,
                     transpose(
-                        new String[][] { { "CCC", "CCC", "CCC" }, { "C~C", "H-H", "HHH" },
-                            { "CCC", "CCC", "CCC" }, }))
+                        new String[][] { { "CCC", "CCC", "CCC" }, { "C~C", "H-H", "HHH" }, { "CCC", "CCC", "CCC" }, }))
                 .addElement(
                     'C',
                     buildHatchAdder(MTEContinuousFlowReactor.class)
@@ -103,9 +117,7 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
                     'H',
                     GTStructureChannels.HEATING_COIL.use(
                         activeCoils(
-                            ofCoil(
-                                MTEContinuousFlowReactor::setCoilLevel,
-                                MTEContinuousFlowReactor::getCoilLevel))))
+                            ofCoil(MTEContinuousFlowReactor::setCoilLevel, MTEContinuousFlowReactor::getCoilLevel))))
                 .build();
         }
         return STRUCTURE_DEFINITION;
@@ -202,6 +214,85 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
             lines.add("Rate capped: coil temperature far exceeds the regime for this reaction");
         }
         return lines.toArray(new String[lines.size()]);
+    }
+
+
+    /**
+     * Runs one batch. Conversion comes from the coil temperature and the reaction's residence time,
+     * so a hotter reactor converts more of the same feed rather than running a different recipe.
+     * <p>
+     * Unconverted feed is returned rather than destroyed. That is the point of modelling conversion
+     * at all: a reaction that does not go to completion leaves something behind, and hiding it would
+     * make the kinetics decorative.
+     */
+    @Override
+    public CheckRecipeResult checkProcessing() {
+        HeatingCoilLevel level = getCoilLevel();
+        if (level == null || level == HeatingCoilLevel.None) {
+            return CheckRecipeResultRegistry.NO_RECIPE;
+        }
+
+        Reaction reaction = Datasets.reaction(DEMONSTRATION_REACTION);
+        if (reaction.basis == null || reaction.referencePoint == null) {
+            return CheckRecipeResultRegistry.NO_RECIPE;
+        }
+
+        double kelvin = level.getHeat();
+        double residence = reaction.referencePoint.residenceTimeSeconds;
+        double conversion = ContinuousReactor.conversion(reaction, kelvin, residence);
+        double basis = reaction.basis.millibucketsPerMole;
+
+        // Everything the batch needs must be present before anything is consumed, so a partial feed
+        // cannot leave the reactor having eaten one reactant and not the other.
+        for (ReactionComponent component : reaction.reactants) {
+            FluidStack required = fluidFor(component, component.moles * basis);
+            if (required == null) {
+                return CheckRecipeResultRegistry.NO_RECIPE;
+            }
+            if (!depleteInput(required, true)) {
+                return CheckRecipeResultRegistry.NO_RECIPE;
+            }
+        }
+
+        List<FluidStack> outputs = new ArrayList<FluidStack>();
+        for (ReactionComponent component : reaction.products) {
+            int amount = (int) Math.floor(component.moles * basis * conversion);
+            FluidStack produced = fluidFor(component, amount);
+            if (produced != null && amount > 0) {
+                outputs.add(produced);
+            }
+        }
+        for (ReactionComponent component : reaction.reactants) {
+            int unreacted = (int) Math.floor(component.moles * basis * (1.0d - conversion));
+            FluidStack returned = fluidFor(component, unreacted);
+            if (returned != null && unreacted > 0) {
+                outputs.add(returned);
+            }
+        }
+
+        for (ReactionComponent component : reaction.reactants) {
+            depleteInput(fluidFor(component, component.moles * basis));
+        }
+
+        mOutputFluids = outputs.toArray(new FluidStack[outputs.size()]);
+        mEfficiency = 10000 - (getIdealStatus() - getRepairStatus()) * 1000;
+        mEfficiencyIncrease = 10000;
+        mMaxProgresstime = (int) Math.max(1.0d, residence * 20.0d);
+        mEUt = -DECLARED_EU_PER_TICK;
+        return CheckRecipeResultRegistry.SUCCESSFUL;
+    }
+
+    /** Resolves a dataset component to a GregTech fluid, or null if the material is unknown. */
+    private static FluidStack fluidFor(ReactionComponent component, double millibuckets) {
+        Materials material = Materials.getRealMaterial(component.material);
+        if (material == null) {
+            return null;
+        }
+        long amount = (long) Math.floor(millibuckets);
+        if (amount <= 0L) {
+            return null;
+        }
+        return component.isGas() ? material.getGas(amount) : material.getFluid(amount);
     }
 
     @Override

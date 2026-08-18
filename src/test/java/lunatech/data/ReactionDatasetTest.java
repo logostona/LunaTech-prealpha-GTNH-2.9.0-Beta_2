@@ -81,6 +81,59 @@ class ReactionDatasetTest {
         }
     }
 
+
+    @Test
+    @DisplayName("Every reaction declares stoichiometry on both sides")
+    void stoichiometryIsPresent() {
+        for (Reaction reaction : Datasets.reactions().reactions) {
+            assertFalse(reaction.reactants.isEmpty(), reaction.id + " declares no reactants");
+            assertFalse(reaction.products.isEmpty(), reaction.id + " declares no products");
+            checkComponents(reaction.id, "reactant", reaction.reactants);
+            checkComponents(reaction.id, "product", reaction.products);
+        }
+    }
+
+    @Test
+    @DisplayName("The moles-to-millibuckets basis is declared and answerable")
+    void basisIsDeclaredNotDerived() {
+        for (Reaction reaction : Datasets.reactions().reactions) {
+            ReactionBasis basis = reaction.basis;
+            assertNotNull(basis, reaction.id + " declares no basis");
+            assertTrue(basis.millibucketsPerMole > 0.0d, reaction.id + " has a non-positive basis");
+            assertNotNull(basis.rationale, reaction.id + " states no rationale for its basis");
+            String rationale = basis.rationale.trim();
+            assertFalse(rationale.isEmpty(), reaction.id + " has a blank basis rationale");
+        }
+    }
+
+    @Test
+    @DisplayName("No component silently duplicates another on the same side")
+    void componentsAreDistinct() {
+        for (Reaction reaction : Datasets.reactions().reactions) {
+            assertDistinct(reaction.id, "reactant", reaction.reactants);
+            assertDistinct(reaction.id, "product", reaction.products);
+        }
+    }
+
+    private static void assertDistinct(String id, String side, java.util.List<ReactionComponent> components) {
+        Set<String> seen = new HashSet<String>();
+        for (ReactionComponent component : components) {
+            boolean fresh = seen.add(component.material);
+            assertTrue(fresh, id + " lists " + component.material + " twice as a " + side);
+        }
+    }
+
+    private static void checkComponents(String id, String side, java.util.List<ReactionComponent> components) {
+        for (ReactionComponent component : components) {
+            String where = id + " " + side + " " + component.material;
+            assertNotNull(component.material, id + " has a " + side + " with no material");
+            assertTrue(component.moles > 0.0d, where + " has a non-positive coefficient");
+            assertNotNull(component.phase, where + " states no phase");
+            boolean known = "gas".equals(component.phase) || "liquid".equals(component.phase);
+            assertTrue(known, where + " has an unrecognised phase: " + component.phase);
+        }
+    }
+
     private static void check(String id, String field, Quantity q, String expectedUnit) {
         String where = id + "." + field;
         assertNotNull(q, "missing " + where);

@@ -24,7 +24,35 @@
         "conversion": 0.8,
         "rationale": "Chosen so one reference operation is a minute at 80 percent conversion, which sets a legible in-game pace. A design choice, not a measurement."
       },
-      "maximumConversion": 0.95
+      "maximumConversion": 0.95,
+      "reactants": [
+        {
+          "material": "CarbonMonoxide",
+          "phase": "gas",
+          "moles": 1.0
+        },
+        {
+          "material": "Water",
+          "phase": "liquid",
+          "moles": 1.0
+        }
+      ],
+      "products": [
+        {
+          "material": "CarbonDioxide",
+          "phase": "gas",
+          "moles": 1.0
+        },
+        {
+          "material": "Hydrogen",
+          "phase": "gas",
+          "moles": 1.0
+        }
+      ],
+      "basis": {
+        "millibucketsPerMole": 1000.0,
+        "rationale": "Declared, not derived. A real millibucket-per-mole mapping needs density at a stated pressure, and the schema has no pressure field yet. One mole per bucket keeps stoichiometry exact and legible until that arrives; the basis scales every component equally, so reactant-to-product ratios do not depend on its value."
+      }
     },
     {
       "id": "steam_methane_reforming",
@@ -47,6 +75,34 @@
         "residenceTimeSeconds": 30.0,
         "conversion": 0.7,
         "rationale": "Half the shift reaction's residence time at lower conversion, so the steeper activation energy is visible as a sharper temperature response in play. A design choice, not a measurement."
+      },
+      "reactants": [
+        {
+          "material": "Methane",
+          "phase": "gas",
+          "moles": 1.0
+        },
+        {
+          "material": "Water",
+          "phase": "liquid",
+          "moles": 1.0
+        }
+      ],
+      "products": [
+        {
+          "material": "CarbonMonoxide",
+          "phase": "gas",
+          "moles": 1.0
+        },
+        {
+          "material": "Hydrogen",
+          "phase": "gas",
+          "moles": 3.0
+        }
+      ],
+      "basis": {
+        "millibucketsPerMole": 1000.0,
+        "rationale": "Declared, not derived. A real millibucket-per-mole mapping needs density at a stated pressure, and the schema has no pressure field yet. One mole per bucket keeps stoichiometry exact and legible until that arrives; the basis scales every component equally, so reactant-to-product ratios do not depend on its value."
       }
     }
   ]

@@ -27,6 +27,15 @@ public final class Reaction {
     /** LunaTech's chosen anchor point. A design decision, not a measurement. */
     public OperatingPoint referencePoint;
 
+    /** What the reaction consumes, in moles. */
+    public java.util.List<ReactionComponent> reactants = new java.util.ArrayList<ReactionComponent>();
+
+    /** What the reaction produces, in moles. */
+    public java.util.List<ReactionComponent> products = new java.util.ArrayList<ReactionComponent>();
+
+    /** Declared moles-to-millibuckets mapping. See {@link ReactionBasis}. */
+    public ReactionBasis basis;
+
     /**
      * Optional ceiling on conversion, standing in for a real equilibrium calculation.
      * <p>

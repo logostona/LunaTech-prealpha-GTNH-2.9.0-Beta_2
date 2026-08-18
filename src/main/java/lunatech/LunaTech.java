@@ -3,14 +3,13 @@ package lunatech;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import gregtech.api.GregTechAPI;
-import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
-import lunatech.machines.MTEContinuousFlowReactor;
-
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import gregtech.api.GregTechAPI;
+import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import lunatech.machines.MTEContinuousFlowReactor;
 
 /**
  * LunaTech — a GregTech 5 Unofficial addon for GTNH 2.9.0-beta2.
@@ -46,7 +45,10 @@ public class LunaTech {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         int id = claimMetaTileId(LunaTechIDs.CONTINUOUS_FLOW_REACTOR);
-        continuousFlowReactor = new MTEContinuousFlowReactor(id, "lunatech.reactor.continuous", "Continuous Flow Reactor");
+        continuousFlowReactor = new MTEContinuousFlowReactor(
+            id,
+            "lunatech.reactor.continuous",
+            "Continuous Flow Reactor");
         LOG.info("Registered Continuous Flow Reactor at metatile id {}.", Integer.valueOf(id));
     }
 
