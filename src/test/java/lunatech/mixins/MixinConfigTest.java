@@ -36,8 +36,12 @@ class MixinConfigTest {
     private static final String EXPECTED_PACKAGE = "lunatech.mixins";
 
     /** Every mixin expected in the build, named explicitly rather than scanned for. */
-    private static final List<String> EXPECTED_MIXINS = Arrays
-        .asList("MixinTooltipHelper", "MixinEUNoOverclockDescriber");
+    private static final List<String> EXPECTED_MIXINS = Arrays.asList(
+        "MixinTooltipHelper",
+        "MixinEUNoOverclockDescriber",
+        "MixinBatteryBufferWaila",
+        "MixinBasicMachineWaila",
+        "MixinMultiBlockWaila");
 
     @Test
     @DisplayName("The mixin config the manifest promises actually exists and is valid JSON")

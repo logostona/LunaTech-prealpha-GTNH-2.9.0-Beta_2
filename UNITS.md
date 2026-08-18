@@ -150,10 +150,15 @@ Five further keys mentioning EU were **deliberately left alone** as ambiguous �
 |---|---|---|
 | `MixinTooltipHelper` | `euCapacityText`, `euRateText` | ✅ tooltip `Capacity: 2,048 EU` → `2.05 kJ`; tooltip rates → watts |
 | `MixinEUNoOverclockDescriber` | `getEUtDisplay`, `getVoltageString` | ✅ NEI `Usage: 4 EU/t` → `Usage: 80 W` |
+| `MixinBatteryBufferWaila` | `getWailaBody` | ✅ Waila `Average Input/Output` → watts |
+| `MixinBasicMachineWaila` | `getWailaBody` | Waila `Currently uses/generates` → watts |
+| `MixinMultiBlockWaila` | `getWailaBody` | Waila multiblock power lines → watts |
 
 The second is needed because NEI builds its recipe lines in the describer, formatting raw EU/t into a lang key — a path neither the language override nor `TooltipHelper` touches. Targeting `EUNoOverclockDescriber` covers the whole EU chain, since `EUOverclockDescriber` and `FusionOverclockDescriber` inherit those methods rather than overriding them.
 
 ⚖️ **Where a mixin supplies the value, the lang key carries no unit of its own.** The unit travels with the value. If a mixin stops applying, the line reads as a bare number rather than a wrong unit — ambiguous beats false. `EnergyLabelTest` enforces the split: energy keys must state joules, mixin-valued keys must state no unit, and a key in neither set fails the build.
+
+**Waila is a fourth surface.** The in-world tooltip formats its own lines in three different metatile classes, so it is reached by neither the language override nor the other two mixins. There the value passes through `formatNumber`, which makes an ordinal-scoped `@Redirect` the natural seam — but ordinals are position-sensitive, so each is bounded to the calls that really are powers: in the battery buffer, calls 0 and 1 are stored energy; in a basic machine, calls 2 and 3 format a steam flow in litres per second; in a multiblock, calls 4 onward are item counts, fluid counts and an average tick time. Converting any of those would state watts for something that is not a power.
 
 **"Voltage" is relabelled rather than converted in place.** GregTech's `Voltage:` line is EU/t divided by amperage — a power per amp, not a potential — so it now reads `Per amp:` in watts. Naming a real voltage still depends on D11.
 

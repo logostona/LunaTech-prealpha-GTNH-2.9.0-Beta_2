@@ -36,3 +36,15 @@ GT5U.scanner.ic2_info_2=Contained Energy: §6%s J §f/ §6%s J
 GT5U.scanner.energy_info_3=Energy: §6%s J §f/ §6%s J
 GT5U.infodata.battery_buffer.stored_items=Stored Items: %s J / %s J
 GT5U.infodata.energy=Stored Energy: %s J / %s J
+
+# --- Waila in-world tooltip ---
+# A fourth display surface, independent of the item tooltip and NEI. "stored" is a plain energy and
+# is relabelled here; the six rate keys carry no unit because MixinBatteryBufferWaila,
+# MixinBasicMachineWaila and MixinMultiBlockWaila substitute an SI power for the raw EU/t.
+GT5U.waila.energy.stored=Stored: §a%s§r J / §e%s§r J
+GT5U.waila.energy.avg_in_with_amperage=Average Input: §a%s§r (%sA %s)
+GT5U.waila.energy.avg_out_with_amperage=Average Output: §c%s§r (%sA %s)
+GT5U.waila.energy.use=Currently uses: §e%s§r (%s)
+GT5U.waila.energy.use_with_amperage=Currently uses: §e%s§r (%sA %s)
+GT5U.waila.energy.produce=Currently generates: §a%s§r (%s)
+GT5U.waila.energy.produce_with_amperage=Currently generates: §a%s§r (%sA %s)

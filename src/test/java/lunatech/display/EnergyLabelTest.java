@@ -48,14 +48,23 @@ class EnergyLabelTest {
             "GT5U.scanner.ic2_info_2",
             "GT5U.scanner.energy_info_3",
             "GT5U.infodata.battery_buffer.stored_items",
-            "GT5U.infodata.energy"));
+            "GT5U.infodata.energy",
+            "GT5U.waila.energy.stored"));
 
     /**
      * Keys stating a power. Watts are EU/t x 20, so the number must change and a mixin supplies
      * both value and unit. These must carry no unit of their own.
      */
     private static final Set<String> MIXIN_VALUED_KEYS = new HashSet<String>(
-        Arrays.asList("GT5U.nei.display.usage", "GT5U.nei.display.voltage"));
+        Arrays.asList(
+            "GT5U.nei.display.usage",
+            "GT5U.nei.display.voltage",
+            "GT5U.waila.energy.avg_in_with_amperage",
+            "GT5U.waila.energy.avg_out_with_amperage",
+            "GT5U.waila.energy.use",
+            "GT5U.waila.energy.use_with_amperage",
+            "GT5U.waila.energy.produce",
+            "GT5U.waila.energy.produce_with_amperage"));
 
     /** Key to the number of format placeholders GregTech's own string uses. */
     private static final Map<String, Integer> EXPECTED_PLACEHOLDERS = new HashMap<String, Integer>();
@@ -72,6 +81,13 @@ class EnergyLabelTest {
         EXPECTED_PLACEHOLDERS.put("GT5U.infodata.energy", 2);
         EXPECTED_PLACEHOLDERS.put("GT5U.nei.display.usage", 2);
         EXPECTED_PLACEHOLDERS.put("GT5U.nei.display.voltage", 2);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.stored", 2);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.avg_in_with_amperage", 3);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.avg_out_with_amperage", 3);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.use", 2);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.use_with_amperage", 3);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.produce", 2);
+        EXPECTED_PLACEHOLDERS.put("GT5U.waila.energy.produce_with_amperage", 3);
     }
 
     @Test
