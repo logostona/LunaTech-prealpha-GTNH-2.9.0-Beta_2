@@ -81,7 +81,6 @@ class ReactionDatasetTest {
         }
     }
 
-
     @Test
     @DisplayName("Every reaction declares stoichiometry on both sides")
     void stoichiometryIsPresent() {

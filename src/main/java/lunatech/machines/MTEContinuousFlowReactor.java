@@ -216,7 +216,6 @@ public class MTEContinuousFlowReactor extends MTEExtendedPowerMultiBlockBase<MTE
         return lines.toArray(new String[lines.size()]);
     }
 
-
     /**
      * Runs one batch. Conversion comes from the coil temperature and the reaction's residence time,
      * so a hotter reactor converts more of the same feed rather than running a different recipe.
